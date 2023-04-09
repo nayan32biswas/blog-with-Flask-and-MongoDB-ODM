@@ -3,7 +3,7 @@
 set -e
 set -x
 
-# mypy app
-flake8 app
-black app --check
-isort app scripts --check-only
+mypy app
+flake8 app tests
+black app tests --check
+isort app tests scripts --check-only

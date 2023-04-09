@@ -13,7 +13,7 @@ from app.user.routers import user_api
 logger = logging.getLogger(__name__)
 
 
-def create_app():
+def create_app() -> Flask:
     dictConfig(config.log_config)
     app = Flask(__name__)
 

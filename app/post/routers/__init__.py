@@ -1,6 +1,5 @@
 from flask import Blueprint
 
-
 from . import comments, posts, reactions
 
 post_api = Blueprint("post", __name__, url_prefix="/")

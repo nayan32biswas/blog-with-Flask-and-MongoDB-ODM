@@ -1,18 +1,17 @@
 import logging
 
-from flask import Blueprint, request, g
+from flask import Blueprint, Response, g, request
 from mongodb_odm import ODMObjectId
 
 from app.base.custom_types import ObjectIdStr
 from app.base.utils import get_offset, parse_json
 from app.base.utils.query import get_object_or_404
-from app.base.utils.response import http_exception
+from app.base.utils.response import custom_response, http_exception
 from app.user.auth import Auth
 from app.user.models import User
 
 from ..models import Comment, EmbeddedReply
 from ..schemas.comments import CommentIn, CommentOut, ReplyIn, ReplyOut
-
 
 logger = logging.getLogger(__name__)
 router = Blueprint("comments", __name__, url_prefix="/api/v1")
@@ -20,9 +19,7 @@ router = Blueprint("comments", __name__, url_prefix="/api/v1")
 
 @router.post("/posts/<string:post_id>/comments")
 @Auth.auth_required
-def create_comments(
-    post_id: ObjectIdStr,
-):
+def create_comments(post_id: ObjectIdStr) -> Response:
     user: User = g.user
     comment_data = parse_json(CommentIn)
 
@@ -33,12 +30,12 @@ def create_comments(
     ).create()
 
     comment.user = user
-    return CommentOut.from_orm(comment).dict(), 201
+    return custom_response(CommentOut.from_orm(comment).dict(), 201)
 
 
 @router.get("/posts/<string:post_id>/comments")
 @Auth.auth_optional
-def get_comments(post_id):
+def get_comments(post_id: ObjectIdStr) -> Response:
     page = int(request.args.get("page", 1))
     limit = int(request.args.get("limit", 20))
 
@@ -65,12 +62,12 @@ def get_comments(post_id):
 
     comment_count = Comment.count_documents(filter)
 
-    return {"count": comment_count, "results": results}
+    return custom_response({"count": comment_count, "results": results}, 200)
 
 
 @router.put("/posts/<string:post_id>/comments/<string:comment_id>")
 @Auth.auth_required
-def update_comments(post_id, comment_id):
+def update_comments(post_id: ObjectIdStr, comment_id: ObjectIdStr) -> Response:
     user: User = g.user
 
     comment_data = parse_json(CommentIn)
@@ -91,12 +88,12 @@ def update_comments(post_id, comment_id):
     comment.update()
     comment.user = user
 
-    return CommentOut.from_orm(comment).dict(), 200
+    return custom_response(CommentOut.from_orm(comment).dict(), 200)
 
 
 @router.delete("/posts/<string:post_id>/comments/<string:comment_id>")
 @Auth.auth_required
-def delete_comments(post_id, comment_id):
+def delete_comments(post_id: ObjectIdStr, comment_id: ObjectIdStr) -> Response:
     user: User = g.user
     comment = get_object_or_404(
         Comment,
@@ -108,14 +105,14 @@ def delete_comments(post_id, comment_id):
         )
     comment.delete()
 
-    return {"message": "Deleted"}
+    return custom_response({"message": "Deleted"}, 200)
 
 
 @router.post(
     "/posts/<string:post_id>/comments/<string:comment_id>/replies",
 )
 @Auth.auth_required
-def create_replies(post_id, comment_id):
+def create_replies(post_id: ObjectIdStr, comment_id: ObjectIdStr) -> Response:
     user: User = g.user
     reply_data = parse_json(ReplyIn)
     comment = get_object_or_404(
@@ -137,14 +134,16 @@ def create_replies(post_id, comment_id):
 
     reply_dict["user"] = user.dict()
 
-    return ReplyOut(**reply_dict).dict(), 201
+    return custom_response(ReplyOut(**reply_dict).dict(), 201)
 
 
 @router.put(
     "/posts/<string:post_id>/comments/<string:comment_id>/replies/<string:reply_id>",
 )
 @Auth.auth_required
-def update_replies(post_id, comment_id, reply_id):
+def update_replies(
+    post_id: ObjectIdStr, comment_id: ObjectIdStr, reply_id: ObjectIdStr
+) -> Response:
     user: User = g.user
     reply_data = parse_json(ReplyIn)
     r_id = ODMObjectId(reply_id)
@@ -164,14 +163,16 @@ def update_replies(post_id, comment_id, reply_id):
             detail="You don't have permission to update this replies",
             status=403,
         )
-    return {"message": "Updated"}, 200
+    return custom_response({"message": "Updated"}, 200)
 
 
 @router.delete(
     "/posts/<string:post_id>/comments/<string:comment_id>/replies/<string:reply_id>",
 )
 @Auth.auth_required
-def delete_replies(post_id, comment_id, reply_id):
+def delete_replies(
+    post_id: ObjectIdStr, comment_id: ObjectIdStr, reply_id: ObjectIdStr
+) -> Response:
     user: User = g.user
 
     r_id = ODMObjectId(reply_id)
@@ -200,4 +201,4 @@ def delete_replies(post_id, comment_id, reply_id):
             detail="You don't have permission to delete this replies", status=403
         )
 
-    return {"message": "Deleted"}
+    return custom_response({"message": "Deleted"}, 200)

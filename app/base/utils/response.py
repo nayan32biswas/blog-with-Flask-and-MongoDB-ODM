@@ -1,6 +1,6 @@
 from typing import Any, Dict
-from flask import json, Response
 
+from flask import Response, json
 from werkzeug.exceptions import HTTPException
 
 
@@ -10,5 +10,5 @@ def custom_response(res: Dict[Any, Any], status: int = 200) -> Response:
     )
 
 
-def http_exception(detail: str, status: int = 400):
+def http_exception(detail: str, status: int = 400) -> HTTPException:
     return HTTPException(response=custom_response({"detail": detail}, status=status))

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Tuple
 from uuid import uuid4
 
-from app.base.config import BASE_DIR, MEDIA_ROOT, ALLOWED_IMAGES
+from app.base.config import ALLOWED_IMAGES, BASE_DIR, MEDIA_ROOT
 from app.base.utils.response import http_exception
 
 from .string import base64, rand_str

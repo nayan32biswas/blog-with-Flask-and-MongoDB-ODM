@@ -7,11 +7,11 @@ from typing import Dict
 from faker import Faker
 from mongodb_odm import InsertOne, apply_indexes
 from mongodb_odm.connection import db
+from werkzeug.security import generate_password_hash
 
 from app.base.utils.decorator import timing
 from app.post.models import Comment, EmbeddedReply, Post, Reaction, Tag
 from app.user.models import User
-from werkzeug.security import generate_password_hash
 
 fake = Faker()
 log = logging.getLogger(__name__)

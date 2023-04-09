@@ -6,10 +6,10 @@ from typing import Any, Dict, Generator
 import pytest
 from mongodb_odm import disconnect
 
+from app.app import create_app
 from app.base import config
 from app.user.models import User
 
-from app.app import create_app
 from .data import populate_dummy_data, users
 
 logger = logging.getLogger(__name__)

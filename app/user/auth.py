@@ -1,15 +1,18 @@
-from enum import Enum
-from typing import Any, Dict
-from bson import ObjectId
-import jwt
 from datetime import datetime, timedelta
-from flask import request, g
+from enum import Enum
 from functools import wraps
-from pydantic import BaseModel
-from werkzeug.security import generate_password_hash, check_password_hash
+from typing import Any, Callable, Dict, List
 
-from app.base.utils.response import http_exception
+import jwt
+from bson import ObjectId
+from flask import g, request
+from pydantic import BaseModel
+from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.datastructures import Headers
+
 from app.base import config
+from app.base.utils.response import http_exception
+
 from .models import User
 
 
@@ -68,7 +71,7 @@ class Auth:
         return Auth.create_token(token_data, exp=expire)
 
     @staticmethod
-    def decode_token(token) -> TokenData:
+    def decode_token(token: str) -> TokenData:
         try:
             payload: Any = jwt.decode(
                 token, config.SECRET_KEY, algorithms=[config.ALGORITHM]
@@ -85,7 +88,7 @@ class Auth:
         return TokenData(id=id, random_str=random_str, token_type=token_type)
 
     @staticmethod
-    def extract_token(headers) -> str:
+    def extract_token(headers: Headers) -> str:
         if not headers:
             raise http_exception(detail="Invalid headers", status=401)
         authorization_str = headers.get("Authorization")
@@ -97,7 +100,7 @@ class Auth:
         return token
 
     @staticmethod
-    def create_access_token_from_refresh_token(refresh_token) -> str:
+    def create_access_token_from_refresh_token(refresh_token: str) -> str:
         try:
             token_data = Auth.decode_token(refresh_token)
         except Exception:
@@ -114,9 +117,9 @@ class Auth:
         return Auth.create_access_token(user)
 
     @staticmethod
-    def auth_required(func):
+    def auth_required(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        def decorated_auth(*args, **kwargs):
+        def decorated_auth(*args: List[Any], **kwargs: Any) -> Any:
             token = Auth.extract_token(request.headers)
             token_data = Auth.decode_token(token)
             if token_data.token_type != TokenType.ACCESS.value:
@@ -136,9 +139,9 @@ class Auth:
         return decorated_auth
 
     @staticmethod
-    def auth_optional(func):
+    def auth_optional(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        def decorated_auth(*args, **kwargs):
+        def decorated_auth(*args: List[Any], **kwargs: Any) -> Any:
             try:
                 token = Auth.extract_token(request.headers)
             except Exception:

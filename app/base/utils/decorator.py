@@ -3,7 +3,7 @@ from time import time
 from typing import Any, Callable, Dict, List
 
 
-def timing(f) -> Callable:
+def timing(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
     def wrap(*args: List[Any], **kwargs: Dict[Any, Any]) -> Any:
         ts = time()

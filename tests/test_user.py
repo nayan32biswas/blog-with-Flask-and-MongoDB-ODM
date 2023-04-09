@@ -3,7 +3,6 @@ from tests.conftest import get_header
 
 from .data import users
 
-
 NEW_USERNAME = "username-exists"
 NEW_PASS = "new-pass"
 NEW_FULL_NAME = "Full Name"

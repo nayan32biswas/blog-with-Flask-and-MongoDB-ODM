@@ -3,5 +3,5 @@
 set -x
 
 autoflake --remove-all-unused-imports --recursive --remove-unused-variables --in-place app
-black app
-isort app
+black app tests
+isort app tests
