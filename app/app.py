@@ -5,11 +5,8 @@ from flask import Flask
 from mongodb_odm import connect, disconnect
 
 from app.base import config
-from .cli import app as cli_app
-
-# from .models import db, bcrypt
-
 from app.base.routers import base_api
+from app.cli import app as cli_app
 from app.post.routers import post_api
 from app.user.routers import user_api
 

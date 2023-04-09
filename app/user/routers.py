@@ -36,7 +36,7 @@ def create():
         logger.warning(f"Raise error while creating user error:{ex}")
         return custom_response({"details": "Something wrong try again."}, 400)
 
-    return custom_response(UserOut.from_orm(user).dict(), 200)
+    return custom_response(UserOut.from_orm(user).dict(), 201)
 
 
 @user_api.post("/token")

@@ -41,7 +41,7 @@ def delete_post_reactions(
     user: User = g.user
 
     post = get_object_or_404(Post, {"_id": ObjectId(post_id)})
-    Reaction.update_one(
+    Reaction.update_many(
         {"post_id": post.id, "user_ids": {"$in": [user.id]}},
         {"$pull": {"user_ids": user.id}},
     )

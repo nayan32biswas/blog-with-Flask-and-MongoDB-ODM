@@ -159,9 +159,6 @@ def update_replies(post_id, comment_id, reply_id):
         array_filters=[{"reply.id": r_id}],
     )
 
-    if update_comment.matched_count != 1:
-        raise http_exception(detail="Object not found", status=404)
-
     if update_comment.modified_count != 1:
         raise http_exception(
             detail="You don't have permission to update this replies",
