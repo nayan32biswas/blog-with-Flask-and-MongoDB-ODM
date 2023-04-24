@@ -13,7 +13,7 @@ git clone https://github.com/nayan32biswas/blog-with-Flask-and-MongoDB-ODM.git
 cd blog-with-Flask-and-MongoDB-ODM
 ```
 
-### [Install Poetry](https://python-poetry.org/docs/#installation){.internal-link target=\_blank}
+### [Install Poetry](https://python-poetry.org/docs/#installation)
 
 We are using poetry to manage our python package.
 
@@ -29,7 +29,7 @@ poetry install
 
 ### Start Mongodb Server
 
-#### [Install MongoDB](https://www.mongodb.com/docs/manual/installation/){.internal-link target=\_blank}
+#### [Install MongoDB](https://www.mongodb.com/docs/manual/installation/)
 
 Install mongodb by following there official doc.
 

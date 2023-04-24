@@ -2,7 +2,6 @@ import logging
 from datetime import datetime
 
 from flask import Blueprint, Response, g
-from werkzeug.security import generate_password_hash
 
 from app.base.utils import parse_json, update_partially
 from app.base.utils.query import get_object_or_404
@@ -24,7 +23,7 @@ def create() -> Response:
         raise http_exception(detail="Username already exists.", status=400)
 
     try:
-        hash_password = generate_password_hash(res_data.password)
+        hash_password = Auth.get_password_hash(res_data.password)
         user = User(
             username=res_data.username,
             full_name=res_data.full_name,
@@ -43,7 +42,7 @@ def create() -> Response:
 def login() -> Response:
     data = parse_json(TokenIn)
 
-    user: User = get_object_or_404(User, {"username": data.username})  # type: ignore
+    user: User = get_object_or_404(User, {"username": data.username})
     if not user.password or not Auth.verify_password(data.password, user.password):
         raise http_exception(detail="Invalid credentials", status=401)
 
@@ -86,6 +85,6 @@ def update_user() -> Response:
     user_data = parse_json(UserIn)
 
     user = g.user
-    user = update_partially(user, user_data)  # type: ignore
+    user = update_partially(user, user_data)
     user.update()
     return custom_response(UserOut.from_orm(user).dict(), 200)

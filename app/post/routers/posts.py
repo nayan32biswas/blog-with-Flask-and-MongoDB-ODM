@@ -151,29 +151,29 @@ def update_posts(post_id: ObjectIdStr) -> Response:
     post_data = parse_json(PostUpdate)
     user: User = g.user
 
-    post: Post = get_object_or_404(Post, {"_id": ObjectId(post_id)})  # type: ignore
+    post: Post = get_object_or_404(Post, {"_id": ObjectId(post_id)})
 
     if post.author_id != user.id:
         raise http_exception(
             detail="You don't have access to update this post.", status=403
         )
 
-    post: Post = update_partially(post, post_data)  # type: ignore
+    updated_post: Post = update_partially(post, post_data)
 
-    post.short_description = post_data.short_description
-    if not post.short_description and post_data.description:
-        post.short_description = get_short_description(post_data.description)
-    post.update()
+    updated_post.short_description = post_data.short_description
+    if not updated_post.short_description and post_data.description:
+        updated_post.short_description = get_short_description(post_data.description)
+    updated_post.update()
 
-    post.author = user
+    updated_post.author = user
 
-    return custom_response(PostDetailsOut.from_orm(post).dict(), 200)
+    return custom_response(PostDetailsOut.from_orm(updated_post).dict(), 200)
 
 
 @router.delete("/posts/<string:post_id>")
 @Auth.auth_required
 def delete_post(post_id: ObjectIdStr) -> Response:
-    post: Post = get_object_or_404(Post, {"_id": ObjectId(post_id)})  # type: ignore
+    post: Post = get_object_or_404(Post, {"_id": ObjectId(post_id)})
     user: User = g.user
 
     if post.author_id != user.id:

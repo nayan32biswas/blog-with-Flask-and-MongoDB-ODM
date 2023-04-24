@@ -2,8 +2,8 @@ import logging
 
 from bson import ObjectId
 from flask import Blueprint, Response, g
-from app.base.custom_types import ObjectIdStr
 
+from app.base.custom_types import ObjectIdStr
 from app.base.utils.query import get_object_or_404
 from app.base.utils.response import custom_response
 from app.user.auth import Auth

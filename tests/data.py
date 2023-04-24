@@ -43,10 +43,8 @@ def create_users(N: int) -> None:
         for user in users
     ]
 
-    pool = multiprocessing.Pool(processes=8)
-    hash_passwords = pool.map(get_hash_password, range(N))
-    pool.close()
-    pool.join()
+    with multiprocessing.Pool(processes=8) as pool:
+        hash_passwords = pool.map(get_hash_password, range(N))
 
     for i in range(max(N - 2, 0)):
         write_users.append(

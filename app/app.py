@@ -29,7 +29,9 @@ def create_app() -> Flask:
 
 if __name__ == "__main__":
     print("new connection")
-    connect(config.MONGO_URL)
+    # connect(config.MONGO_URL)
+
+    app = create_app()
 
     cli_app()
     disconnect()
