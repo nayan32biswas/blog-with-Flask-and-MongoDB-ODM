@@ -2,7 +2,7 @@ import logging
 import multiprocessing
 import random
 from datetime import datetime
-from typing import Dict
+from typing import Any, Dict
 
 from faker import Faker
 from mongodb_odm import InsertOne, apply_indexes
@@ -22,7 +22,7 @@ users = [
 ]
 
 
-def get_hash_password(_):
+def get_hash_password(_: Any) -> str:
     return generate_password_hash(fake.password())
 
 
@@ -72,7 +72,7 @@ def create_tags(N: int) -> None:
     log.info(f"{len(data_set)} tag created")
 
 
-def get_post() -> Dict:
+def get_post() -> Dict[str, Any]:
     return {
         "title": fake.sentence(),
         "publish_at": datetime.utcnow(),
