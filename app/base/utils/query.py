@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, no_type_check
 
 from mongodb_odm.exceptions import ObjectDoesNotExist
 
@@ -8,6 +8,7 @@ from app.base.utils.response import http_exception
 logger = logging.getLogger(__name__)
 
 
+@no_type_check
 def get_object_or_404(
     Model,
     filter: Dict[str, Any],

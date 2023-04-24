@@ -8,30 +8,22 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 flask = "^2.2.3"
-passlib = "1.7.4"
 pydantic = "~1.10.7"
 pyjwt = "~2.6.0"
-pymongo = {version = "~4.3.3", extras = ["srv"]}
-python-multipart = "0.0.6"
+pymongo = { version = "~4.3.3", extras = ["srv"] }
 typer = "0.7.0"
-mongodb-odm = "0.2.1"
-# mongodb-odm = { git = "https://github.com/nayan32biswas/mongodb-odm.git", rev = "main" }
+# mongodb-odm = "0.2.2"
+mongodb-odm = { git = "https://github.com/nayan32biswas/mongodb-odm.git", rev = "main" }
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
 coverage = { extras = ["toml"], version = "^7.2.2" }
-httpx = "^0.23.0"
 flake8 = "^5.0.4"
 isort = "^5.12.0"
 mypy = "1.1.1"
-mdx-include = "^1.4.2"
-mkdocs = "^1.4.2"
-mkdocs-material = "^9.1.4"
 pre-commit = "^3.2.1"
 pytest = "^7.2.2"
-pip-tools = "6.12.3"
 Faker = "18.3.2"
-types-passlib = "1.7.7.11"
 
 [build-system]
 requires = ["poetry-core"]

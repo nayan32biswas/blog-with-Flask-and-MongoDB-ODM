@@ -3,15 +3,14 @@ import re
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from flask import Blueprint, request, g
-
 from bson import ObjectId
+from flask import Blueprint, Response, g, request
 from mongodb_odm import ODMObjectId
 
 from app.base.custom_types import ObjectIdStr
 from app.base.utils import get_offset, parse_json, update_partially
 from app.base.utils.query import get_object_or_404
-from app.base.utils.response import http_exception
+from app.base.utils.response import custom_response, http_exception
 from app.user.auth import Auth
 from app.user.models import User
 
@@ -25,14 +24,13 @@ from ..schemas.posts import (
     TagOut,
 )
 
-
 logger = logging.getLogger(__name__)
 router = Blueprint("posts", __name__, url_prefix="/api/v1")
 
 
 @router.post("/tags")
 @Auth.auth_required
-def create_tags():
+def create_tags() -> Response:
     user: User = g.user
 
     tag_data = parse_json(TagIn)
@@ -45,12 +43,12 @@ def create_tags():
             tag.user_id = user.id
         tag.update()
 
-    return TagOut.from_orm(tag).dict(), 201
+    return custom_response(TagOut.from_orm(tag).dict(), 201)
 
 
 @router.get("/tags")
 @Auth.auth_optional
-def get_tags():
+def get_tags() -> Response:
     page = int(request.args.get("page", 1))
     limit = int(request.args.get("limit", 20))
     q = request.args.get("q")
@@ -65,7 +63,7 @@ def get_tags():
 
     tag_count = Tag.count_documents(filter=filter)
 
-    return {"count": tag_count, "results": results}
+    return custom_response({"count": tag_count, "results": results}, 200)
 
 
 def get_short_description(description: Optional[str]) -> str:
@@ -76,7 +74,7 @@ def get_short_description(description: Optional[str]) -> str:
 
 @router.post("/posts")
 @Auth.auth_required
-def create_posts():
+def create_posts() -> Response:
     user: User = g.user
     post_data = parse_json(PostCreate)
 
@@ -99,11 +97,11 @@ def create_posts():
         TagOut.from_orm(tag) for tag in Tag.find({"_id": {"$in": post.tag_ids}})
     ]
 
-    return PostDetailsOut.from_orm(post).dict(), 201
+    return custom_response(PostDetailsOut.from_orm(post).dict(), 201)
 
 
 @router.get("/posts")
-def get_posts():
+def get_posts() -> Response:
     page = int(request.args.get("page", 1))
     limit = int(request.args.get("limit", 20))
     q = request.args.get("q")
@@ -126,11 +124,11 @@ def get_posts():
 
     post_count = Post.count_documents(filter=filter)
 
-    return {"count": post_count, "results": results}
+    return custom_response({"count": post_count, "results": results}, 200)
 
 
 @router.get("/posts/<string:post_id>")
-def get_post_details(post_id):
+def get_post_details(post_id: ObjectIdStr) -> Response:
     filter: Dict[str, Any] = {
         "_id": ObjectId(post_id),
         "publish_at": {"$ne": None, "$lt": datetime.utcnow()},
@@ -144,38 +142,38 @@ def get_post_details(post_id):
         TagOut.from_orm(tag) for tag in Tag.find({"_id": {"$in": post.tag_ids}})
     ]
 
-    return PostDetailsOut.from_orm(post).dict(), 200
+    return custom_response(PostDetailsOut.from_orm(post).dict(), 200)
 
 
 @router.patch("/posts/<string:post_id>")
 @Auth.auth_required
-def update_posts(post_id):
+def update_posts(post_id: ObjectIdStr) -> Response:
     post_data = parse_json(PostUpdate)
     user: User = g.user
 
-    post = get_object_or_404(Post, {"_id": ObjectId(post_id)})
+    post: Post = get_object_or_404(Post, {"_id": ObjectId(post_id)})
 
     if post.author_id != user.id:
         raise http_exception(
             detail="You don't have access to update this post.", status=403
         )
 
-    post = update_partially(post, post_data)
+    updated_post: Post = update_partially(post, post_data)
 
-    post.short_description = post_data.short_description
-    if not post.short_description and post_data.description:
-        post.short_description = get_short_description(post_data.description)
-    post.update()
+    updated_post.short_description = post_data.short_description
+    if not updated_post.short_description and post_data.description:
+        updated_post.short_description = get_short_description(post_data.description)
+    updated_post.update()
 
-    post.author = user
+    updated_post.author = user
 
-    return PostDetailsOut.from_orm(post).dict(), 200
+    return custom_response(PostDetailsOut.from_orm(updated_post).dict(), 200)
 
 
 @router.delete("/posts/<string:post_id>")
 @Auth.auth_required
-def delete_post(post_id: ObjectIdStr):
-    post = get_object_or_404(Post, {"_id": ObjectId(post_id)})
+def delete_post(post_id: ObjectIdStr) -> Response:
+    post: Post = get_object_or_404(Post, {"_id": ObjectId(post_id)})
     user: User = g.user
 
     if post.author_id != user.id:
@@ -183,4 +181,4 @@ def delete_post(post_id: ObjectIdStr):
             detail="You don't have access to delete this post.", status=403
         )
     post.delete()
-    return {"message": "Deleted"}, 200
+    return custom_response({"message": "Deleted"}, 200)

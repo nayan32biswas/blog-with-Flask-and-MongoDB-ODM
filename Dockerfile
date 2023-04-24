@@ -14,7 +14,7 @@ RUN pip install "poetry==1.4.1"
 
 WORKDIR /code
 
-COPY pyproject.toml /code/
+COPY pyproject.toml poetry.* /code/
 RUN poetry config virtualenvs.create false \
   &&  poetry install $(test "$YOUR_ENV" == production && echo "--no-dev") --no-interaction --no-ansi
 

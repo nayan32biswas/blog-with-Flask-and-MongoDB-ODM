@@ -1,8 +1,7 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 
-from flask import Blueprint, g
-from werkzeug.security import generate_password_hash
+from flask import Blueprint, Response, g
 
 from app.base.utils import parse_json, update_partially
 from app.base.utils.query import get_object_or_404
@@ -17,14 +16,14 @@ logger = logging.getLogger(__name__)
 
 
 @user_api.post("/registration")
-def create():
+def create() -> Response:
     res_data = parse_json(Registration)
 
     if User.exists({"username": res_data.username}):
         raise http_exception(detail="Username already exists.", status=400)
 
     try:
-        hash_password = generate_password_hash(res_data.password)
+        hash_password = Auth.get_password_hash(res_data.password)
         user = User(
             username=res_data.username,
             full_name=res_data.full_name,
@@ -36,21 +35,21 @@ def create():
         logger.warning(f"Raise error while creating user error:{ex}")
         return custom_response({"details": "Something wrong try again."}, 400)
 
-    return custom_response(UserOut.from_orm(user).dict(), 200)
+    return custom_response(UserOut.from_orm(user).dict(), 201)
 
 
 @user_api.post("/token")
-def login():
+def login() -> Response:
     data = parse_json(TokenIn)
 
-    user = get_object_or_404(User, {"username": data.username})
+    user: User = get_object_or_404(User, {"username": data.username})
     if not user.password or not Auth.verify_password(data.password, user.password):
         raise http_exception(detail="Invalid credentials", status=401)
 
     access_token = Auth.create_access_token(user)
     refresh_token = Auth.create_refresh_token(user)
 
-    user.update({"$set": {"last_login": datetime.utcnow()}})
+    user.update(raw={"$set": {"last_login": datetime.utcnow()}})
 
     return custom_response(
         {"access_token": access_token, "refresh_token": refresh_token}, 200
@@ -58,7 +57,7 @@ def login():
 
 
 @user_api.post("/update-access-token")
-def update_access_token():
+def update_access_token() -> Response:
     data = parse_json(UpdateAccessTokenIn)
 
     access_token = Auth.create_access_token_from_refresh_token(data.refresh_token)
@@ -67,22 +66,22 @@ def update_access_token():
 
 @user_api.put("/logout-from-all-device")
 @Auth.auth_required
-def logout_from_all_device():
+def logout_from_all_device() -> Response:
     user = g.user
     user.random_str = User.new_random_str()
     user.update()
-    return {"message": "Logged out."}
+    return custom_response({"message": "Logged out."}, 200)
 
 
 @user_api.get("/me")
 @Auth.auth_required
-def ger_me():
+def ger_me() -> Response:
     return custom_response(UserOut.from_orm(g.user).dict(), 200)
 
 
 @user_api.patch("/update-user")
 @Auth.auth_required
-def update_user():
+def update_user() -> Response:
     user_data = parse_json(UserIn)
 
     user = g.user

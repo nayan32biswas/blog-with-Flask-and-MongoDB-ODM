@@ -1,10 +1,11 @@
 import logging
 
 from bson import ObjectId
+from flask import Blueprint, Response, g
 
-from flask import Blueprint, g
 from app.base.custom_types import ObjectIdStr
 from app.base.utils.query import get_object_or_404
+from app.base.utils.response import custom_response
 from app.user.auth import Auth
 from app.user.models import User
 
@@ -16,9 +17,7 @@ router = Blueprint("reactions", __name__, url_prefix="/api/v1")
 
 @router.post("/posts/<string:post_id>/reactions")
 @Auth.auth_required
-def create_reactions(
-    post_id: ObjectIdStr,
-):
+def create_reactions(post_id: ObjectIdStr) -> Response:
     user: User = g.user
     post = get_object_or_404(Post, {"_id": ObjectId(post_id)})
     update_result = Reaction.update_one(
@@ -30,19 +29,17 @@ def create_reactions(
         pass
         # Insert new one
         # update_result.matched_count and update_result.modified_count should be zero
-    return {"message": "Reaction Added"}, 200
+    return custom_response({"message": "Reaction Added"}, 200)
 
 
 @router.delete("/posts/<string:post_id>/reactions")
 @Auth.auth_required
-def delete_post_reactions(
-    post_id: ObjectIdStr,
-):
+def delete_post_reactions(post_id: ObjectIdStr) -> Response:
     user: User = g.user
 
     post = get_object_or_404(Post, {"_id": ObjectId(post_id)})
-    Reaction.update_one(
+    Reaction.update_many(
         {"post_id": post.id, "user_ids": {"$in": [user.id]}},
         {"$pull": {"user_ids": user.id}},
     )
-    return {"message": "Reaction Deleted"}
+    return custom_response({"message": "Reaction Deleted"}, 200)
