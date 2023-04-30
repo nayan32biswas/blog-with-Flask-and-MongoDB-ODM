@@ -6,7 +6,7 @@ from typing import Any, Dict, Generator
 import pytest
 from mongodb_odm import disconnect
 
-from app.app import create_app
+from app.main import app as flask_app
 from app.base import config
 from app.user.models import User
 
@@ -17,8 +17,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture()
 def app() -> Generator:
-    app = create_app()
-    app.config.update({"TESTING": True})
+    flask_app.config.update({"TESTING": True})
 
     if not User.exists({"username": users[0]["username"]}):
         populate_dummy_data()

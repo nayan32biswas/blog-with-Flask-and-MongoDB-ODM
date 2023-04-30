@@ -7,7 +7,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
+Faker = "18.3.2"
 flask = "^2.2.3"
+gunicorn = "20.1.0"
 pydantic = "~1.10.7"
 pyjwt = "~2.6.0"
 pymongo = { version = "~4.3.3", extras = ["srv"] }
@@ -23,7 +25,6 @@ isort = "^5.12.0"
 mypy = "1.1.1"
 pre-commit = "^3.2.1"
 pytest = "^7.2.2"
-Faker = "18.3.2"
 
 [build-system]
 requires = ["poetry-core"]
