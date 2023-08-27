@@ -1,9 +1,11 @@
 import logging
+import os
 
-from flask import Blueprint, Response, request
+from flask import Blueprint, Response, request, send_file
+from app.base.config import MEDIA_ROOT
 
 from app.base.utils.file import save_file
-from app.base.utils.response import custom_response, http_exception
+from app.base.utils.response import ExType, custom_response, http_exception
 from app.user.auth import Auth
 
 base_api = Blueprint("base", __name__, url_prefix="")
@@ -19,7 +21,26 @@ def index() -> Response:
 @Auth.auth_required
 def create_upload_image() -> Response:
     if "image" not in request.files:
-        raise http_exception(detail="Invalid image", status=400)
+        raise http_exception(
+            status=400, code=ExType.VALIDATION_ERROR, detail="Invalid image"
+        )
     file = request.files["image"]
     image_path = save_file(file, root_folder="image")
     return custom_response({"image_path": image_path}, 201)
+
+
+@base_api.get("/media/{file_path:path}")
+@Auth.auth_optional
+async def get_image(
+    file_path: str,
+) -> Response:
+    file_path = f"{MEDIA_ROOT}/{file_path}"
+
+    if os.path.isfile(file_path):
+        return send_file(file_path)
+    else:
+        raise http_exception(
+            status=400,
+            code=ExType.OBJECT_NOT_FOUND,
+            detail="file not found",
+        )

@@ -46,3 +46,12 @@ class PublicUserListOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class PublicUserProfile(BaseModel):
+    username: str = Field(...)
+    full_name: str = Field(...)
+    image: Optional[str] = Field(default=None)
+
+    class Config:
+        orm_mode = True

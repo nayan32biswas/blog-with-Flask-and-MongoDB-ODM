@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from enum import Enum
 from functools import wraps
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 import jwt
 from bson import ObjectId
@@ -11,7 +11,7 @@ from werkzeug.datastructures import Headers
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.base import config
-from app.base.utils.response import http_exception
+from app.base.utils.response import ExType, http_exception
 
 from .models import User
 
@@ -28,9 +28,15 @@ class TokenData(BaseModel):
 
 
 credentials_exception = http_exception(
-    detail="Could not validate credentials", status=401
+    status=401,
+    code=ExType.AUTHENTICATION_ERROR,
+    detail="Could not validate credentials",
 )
-invalid_refresh_token = http_exception(detail="Invalid Refresh Token", status=403)
+invalid_refresh_token = http_exception(
+    status=403,
+    code=ExType.AUTHENTICATION_ERROR,
+    detail="Invalid Refresh Token",
+)
 
 
 class Auth:
@@ -47,6 +53,17 @@ class Auth:
         data["iat"] = datetime.utcnow()
         data["exp"] = exp
         return jwt.encode(data, config.SECRET_KEY, algorithm=config.ALGORITHM)
+
+    @staticmethod
+    def authenticate_user(username: str, password: str) -> Optional[User]:
+        user = User.find_one({"username": username})
+        if not user:
+            return None
+        if not user.password:
+            return None
+        if not Auth.verify_password(password, user.password):
+            return None
+        return user
 
     @staticmethod
     def create_access_token(user: User) -> str:
@@ -90,7 +107,11 @@ class Auth:
     @staticmethod
     def extract_token(headers: Headers) -> str:
         if not headers:
-            raise http_exception(detail="Invalid headers", status=401)
+            raise http_exception(
+                status=401,
+                code=ExType.AUTHENTICATION_ERROR,
+                detail="Invalid headers",
+            )
         authorization_str = headers.get("Authorization")
         if not authorization_str:
             raise credentials_exception

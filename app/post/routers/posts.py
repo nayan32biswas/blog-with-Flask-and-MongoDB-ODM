@@ -10,11 +10,11 @@ from mongodb_odm import ODMObjectId
 from app.base.custom_types import ObjectIdStr
 from app.base.utils import get_offset, parse_json, update_partially
 from app.base.utils.query import get_object_or_404
-from app.base.utils.response import custom_response, http_exception
+from app.base.utils.response import ExType, custom_response, http_exception
 from app.user.auth import Auth
 from app.user.models import User
 
-from ..models import Post, Tag
+from ..models import Post, Topic
 from ..schemas.posts import (
     PostCreate,
     PostDetailsOut,
@@ -28,27 +28,27 @@ logger = logging.getLogger(__name__)
 router = Blueprint("posts", __name__, url_prefix="/api/v1")
 
 
-@router.post("/tags")
+@router.post("/topics")
 @Auth.auth_required
-def create_tags() -> Response:
+def create_topics() -> Response:
     user: User = g.user
 
-    tag_data = parse_json(TagIn)
+    topic_data = parse_json(TagIn)
 
-    name = tag_data.name.lower()
-    tag, created = Tag.get_or_create({"name": name})
+    name = topic_data.name.lower()
+    topic, created = Topic.get_or_create({"name": name})
 
     if created:
         if user:
-            tag.user_id = user.id
-        tag.update()
+            topic.user_id = user.id
+        topic.update()
 
-    return custom_response(TagOut.from_orm(tag).dict(), 201)
+    return custom_response(TagOut.from_orm(topic).dict(), 201)
 
 
-@router.get("/tags")
+@router.get("/topics")
 @Auth.auth_optional
-def get_tags() -> Response:
+def get_topics() -> Response:
     page = int(request.args.get("page", 1))
     limit = int(request.args.get("limit", 20))
     q = request.args.get("q")
@@ -58,12 +58,12 @@ def get_tags() -> Response:
     if q:
         filter["name"] = re.compile(q, re.IGNORECASE)
 
-    tag_qs = Tag.find(filter=filter, limit=limit, skip=offset)
-    results = [TagOut.from_orm(tag).dict() for tag in tag_qs]
+    topic_qs = Topic.find(filter=filter, limit=limit, skip=offset)
+    results = [TagOut.from_orm(topic).dict() for topic in topic_qs]
 
-    tag_count = Tag.count_documents(filter=filter)
+    topic_count = Topic.count_documents(filter=filter)
 
-    return custom_response({"count": tag_count, "results": results}, 200)
+    return custom_response({"count": topic_count, "results": results}, 200)
 
 
 def get_short_description(description: Optional[str]) -> str:
@@ -89,12 +89,12 @@ def create_posts() -> Response:
         description=post_data.description,
         cover_image=post_data.cover_image,
         publish_at=post_data.publish_at,
-        tag_ids=[ODMObjectId(id) for id in post_data.tag_ids],
+        topic_ids=[ODMObjectId(id) for id in post_data.topic_ids],
     ).create()
 
     post.author = user
-    post.tags = [
-        TagOut.from_orm(tag) for tag in Tag.find({"_id": {"$in": post.tag_ids}})
+    post.topics = [
+        TagOut.from_orm(topic) for topic in Topic.find({"_id": {"$in": post.topic_ids}})
     ]
 
     return custom_response(PostDetailsOut.from_orm(post).dict(), 201)
@@ -105,7 +105,7 @@ def get_posts() -> Response:
     page = int(request.args.get("page", 1))
     limit = int(request.args.get("limit", 20))
     q = request.args.get("q")
-    tags = request.args.getlist("tags")
+    topics = request.args.getlist("topics")
     author_id = request.args.get("author_id")
 
     offset = get_offset(page, limit)
@@ -114,8 +114,8 @@ def get_posts() -> Response:
     }
     if author_id:
         filter["author_id"] = ObjectId(author_id)
-    if tags:
-        filter["tag_ids"] = {"$in": [ODMObjectId(id) for id in tags]}
+    if topics:
+        filter["topic_ids"] = {"$in": [ODMObjectId(id) for id in topics]}
     if q:
         filter["title"] = q
 
@@ -137,9 +137,11 @@ def get_post_details(post_id: ObjectIdStr) -> Response:
         post = Post.get(filter=filter)
         post.author = User.get({"_id": post.author_id})
     except Exception:
-        raise http_exception(detail="Object not found.", status=400)
-    post.tags = [
-        TagOut.from_orm(tag) for tag in Tag.find({"_id": {"$in": post.tag_ids}})
+        raise http_exception(
+            status=400, code=ExType.OBJECT_NOT_FOUND, detail="Object not found."
+        )
+    post.topics = [
+        TagOut.from_orm(topic) for topic in Topic.find({"_id": {"$in": post.topic_ids}})
     ]
 
     return custom_response(PostDetailsOut.from_orm(post).dict(), 200)
@@ -155,7 +157,9 @@ def update_posts(post_id: ObjectIdStr) -> Response:
 
     if post.author_id != user.id:
         raise http_exception(
-            detail="You don't have access to update this post.", status=403
+            status=403,
+            code=ExType.PERMISSION_ERROR,
+            detail="You don't have access to update this post.",
         )
 
     updated_post: Post = update_partially(post, post_data)
@@ -178,7 +182,9 @@ def delete_post(post_id: ObjectIdStr) -> Response:
 
     if post.author_id != user.id:
         raise http_exception(
-            detail="You don't have access to delete this post.", status=403
+            status=403,
+            code=ExType.PERMISSION_ERROR,
+            detail="You don't have access to delete this post.",
         )
     post.delete()
     return custom_response({"message": "Deleted"}, 200)

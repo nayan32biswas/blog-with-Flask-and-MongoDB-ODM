@@ -41,9 +41,10 @@ class PostCreate(BaseModel):
     cover_image: Optional[str] = None
 
     publish_at: Optional[datetime] = None
+    publish_now: Optional[bool] = None
 
     description: Optional[str] = None
-    tag_ids: List[ObjectIdStr] = []
+    topics: List[str] = []
 
     class Config:
         orm_mode = True

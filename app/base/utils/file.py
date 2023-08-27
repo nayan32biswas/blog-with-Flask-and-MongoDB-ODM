@@ -6,8 +6,7 @@ from uuid import uuid4
 
 from werkzeug.datastructures import FileStorage
 
-from app.base.config import ALLOWED_IMAGES, BASE_DIR, MEDIA_ROOT
-from app.base.utils.response import http_exception
+from app.base.config import BASE_DIR, MEDIA_ROOT
 
 from .string import base64, rand_str
 
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_name_and_extension(filename: Optional[str]) -> Tuple[str, str]:
-    if not filename:
+    if filename is None:
         return "", ""
     name_list = filename.split(".")
     if len(name_list) >= 2:
@@ -37,8 +36,6 @@ def save_file(uploaded_file: FileStorage, root_folder: str = "image") -> str:
     if not uploaded_file:
         return ""
     _, ext = get_name_and_extension(uploaded_file.filename)
-    if ext not in ALLOWED_IMAGES:
-        raise http_exception(detail="Unsupported image extension")
     folder_location = f"{MEDIA_ROOT}/{get_folder_path(root_folder)}"
 
     if not os.path.exists(folder_location):
@@ -47,9 +44,8 @@ def save_file(uploaded_file: FileStorage, root_folder: str = "image") -> str:
     file_location = f"{folder_location}/{get_unique_file_name(ext)}"
     try:
         with open(file_location, "wb+") as file_object:
-            file_object.write(uploaded_file.read())
+            file_object.write(uploaded_file.file.read())
         file_path = file_location.split(f"{BASE_DIR}")[-1]
         return file_path
-    except Exception as e:
-        logger.error(e)
+    except Exception:
         return ""

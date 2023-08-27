@@ -14,9 +14,10 @@ from mongodb_odm import (
 from app.user.models import User
 
 
-class Tag(Document):
-    user_id: Optional[ODMObjectId] = Field(None)
+class Topic(Document):
+    user_id: Optional[ODMObjectId] = None
     name: str = Field(max_length=127)
+    description: Optional[str] = Field(default=None)
 
     class Config(Document.Config):
         indexes = [
@@ -28,13 +29,16 @@ class Post(Document):
     author_id: ODMObjectId = Field(...)
 
     title: str = Field(max_length=255)
+    slug: str = Field(max_length=300)
     short_description: Optional[str] = Field(max_length=512, default=None)
     cover_image: Optional[str] = None
     description: Optional[str] = None
+    total_comment: int = Field(default=0)
+    total_reaction: int = Field(default=0)
 
     publish_at: Optional[datetime] = None
 
-    tag_ids: List[ODMObjectId] = []
+    topic_ids: List[ODMObjectId] = []
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -43,8 +47,9 @@ class Post(Document):
 
     class Config(Document.Config):
         indexes = [
+            IndexModel([("slug", ASCENDING)], unique=True),
             IndexModel([("author", ASCENDING)]),
-            IndexModel([("tags", ASCENDING)]),
+            IndexModel([("topics", ASCENDING)]),
         ]
 
 

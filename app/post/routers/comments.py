@@ -6,7 +6,7 @@ from mongodb_odm import ODMObjectId
 from app.base.custom_types import ObjectIdStr
 from app.base.utils import get_offset, parse_json
 from app.base.utils.query import get_object_or_404
-from app.base.utils.response import custom_response, http_exception
+from app.base.utils.response import ExType, custom_response, http_exception
 from app.user.auth import Auth
 from app.user.models import User
 
@@ -80,8 +80,9 @@ def update_comments(post_id: ObjectIdStr, comment_id: ObjectIdStr) -> Response:
     )
     if comment.user_id != user.id:
         raise http_exception(
-            detail="You don't have access to update this comment.",
             status=403,
+            code=ExType.PERMISSION_ERROR,
+            detail="You don't have access to update this comment.",
         )
 
     comment.description = comment_data.description
@@ -101,7 +102,9 @@ def delete_comments(post_id: ObjectIdStr, comment_id: ObjectIdStr) -> Response:
     )
     if comment.user_id != user.id:
         raise http_exception(
-            detail="You don't have access to delete this comment.", status=403
+            status=403,
+            code=ExType.PERMISSION_ERROR,
+            detail="You don't have access to delete this comment.",
         )
     comment.delete()
 
@@ -124,8 +127,9 @@ def create_replies(post_id: ObjectIdStr, comment_id: ObjectIdStr) -> Response:
     )
     if len(comment.replies) >= 100:
         raise http_exception(
-            detail="Comment should have less then 100 comment.",
             status=400,
+            code=ExType.VALIDATION_ERROR,
+            detail="Comment should have less then 100 comment.",
         )
     reply_dict = EmbeddedReply(
         id=ODMObjectId(), user_id=user.id, description=reply_data.description
@@ -160,8 +164,9 @@ def update_replies(
 
     if update_comment.modified_count != 1:
         raise http_exception(
-            detail="You don't have permission to update this replies",
             status=403,
+            code=ExType.PERMISSION_ERROR,
+            detail="You don't have permission to update this replies",
         )
     return custom_response({"message": "Updated"}, 200)
 
@@ -198,7 +203,9 @@ def delete_replies(
     )
     if update_comment.modified_count != 1:
         raise http_exception(
-            detail="You don't have permission to delete this replies", status=403
+            status=403,
+            code=ExType.PERMISSION_ERROR,
+            detail="You don't have permission to delete this replies",
         )
 
     return custom_response({"message": "Deleted"}, 200)

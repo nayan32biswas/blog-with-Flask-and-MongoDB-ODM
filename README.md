@@ -117,7 +117,7 @@ Before creating PR make sure you follow those steps:
 docker run -d --name blog_database -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=password mongo
 
 docker build -t flask-blog -f Dockerfile.prod .
-docker run --name flask-blog -p 8000:8000 --env-file .env flask-blog
+docker run --rm -d --name flask-blog -p 8000:8000 --env-file .env flask-blog
 
 docker run --rm --env-file .env flask-blog python -m app.main delete-data
 docker run --rm --env-file .env flask-blog python -m app.main populate-data --total-user 10000 --total-post 10000
