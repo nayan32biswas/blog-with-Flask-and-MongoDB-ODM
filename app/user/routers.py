@@ -9,6 +9,7 @@ from app.base.utils.query import get_object_or_404
 from app.base.utils.response import ExType, custom_response, http_exception
 from app.user.auth import Auth
 from app.user.schemas import (
+    ChangePasswordIn,
     PublicUserProfile,
     Registration,
     TokenIn,
@@ -91,7 +92,7 @@ def update_access_token() -> Response:
 @user_api.post("/change-password")
 @Auth.auth_required
 def change_password() -> Any:
-    data = parse_json(UpdateAccessTokenIn)
+    data = parse_json(ChangePasswordIn)
 
     user = g.user
     if not user.password or not Auth.verify_password(

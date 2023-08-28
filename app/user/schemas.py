@@ -23,6 +23,11 @@ class UpdateAccessTokenIn(BaseModel):
     refresh_token: str
 
 
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str
+
+
 class UserIn(BaseModel):
     full_name: Optional[str] = Field(default=None)
     image: Optional[str] = Field(default=None)

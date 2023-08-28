@@ -163,6 +163,7 @@ class Auth:
     def auth_optional(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
         def decorated_auth(*args: List[Any], **kwargs: Any) -> Any:
+            g.user = None
             try:
                 token = Auth.extract_token(request.headers)
             except Exception:

@@ -44,7 +44,7 @@ def save_file(uploaded_file: FileStorage, root_folder: str = "image") -> str:
     file_location = f"{folder_location}/{get_unique_file_name(ext)}"
     try:
         with open(file_location, "wb+") as file_object:
-            file_object.write(uploaded_file.file.read())
+            file_object.write(uploaded_file.read())
         file_path = file_location.split(f"{BASE_DIR}")[-1]
         return file_path
     except Exception:
