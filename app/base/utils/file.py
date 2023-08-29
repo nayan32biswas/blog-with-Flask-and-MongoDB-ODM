@@ -8,7 +8,7 @@ from werkzeug.datastructures import FileStorage
 
 from app.base.config import BASE_DIR, MEDIA_ROOT
 
-from .string import base64, rand_str
+from .string import base64, rand_slug_str
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ def get_folder_path(root_folder: str) -> str:
 
 
 def get_unique_file_name(ext: str) -> str:
-    return f"{uuid4().hex}{rand_str(6)}.{ext}"
+    return f"{uuid4().hex}{rand_slug_str(6)}.{ext}"
 
 
 def save_file(uploaded_file: FileStorage, root_folder: str = "image") -> str:

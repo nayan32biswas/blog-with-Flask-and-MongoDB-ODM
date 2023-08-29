@@ -29,15 +29,14 @@ def create_upload_image() -> Response:
     return custom_response({"image_path": image_path}, 201)
 
 
-@base_api.get("/media/{file_path:path}")
+@base_api.get("/media/<path:file_path>")
 @Auth.auth_optional
-async def get_image(
-    file_path: str,
-) -> Response:
+def get_image(file_path) -> Response:
     file_path = f"{MEDIA_ROOT}/{file_path}"
-
     if os.path.isfile(file_path):
         return send_file(file_path)
+        # return send_from_directory(MEDIA_ROOT, file_path)
+
     else:
         raise http_exception(
             status=400,
