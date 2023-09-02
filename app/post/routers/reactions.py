@@ -42,7 +42,7 @@ def create_reactions(slug: str) -> Response:
     else:
         message = "You already have an reaction in this post"
 
-    return custom_response({"message": message}, 200)
+    return custom_response({"message": message}, 201)
 
 
 @router.delete("/posts/<string:slug>/reactions")

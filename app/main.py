@@ -5,6 +5,7 @@ from flask import Flask
 from mongodb_odm import connect, disconnect
 
 from app.base import config
+from app.base.middleware import catch_exceptions_middleware
 from app.base.routers import base_api
 from app.cli import app as cli_app
 from app.post.routers import post_api
@@ -29,6 +30,7 @@ def create_app() -> Flask:
 
 app = create_app()
 
+app.register_error_handler(500, catch_exceptions_middleware)
 
 if __name__ == "__main__":
     print("new connection")

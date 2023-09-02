@@ -10,6 +10,7 @@ from mongodb_odm import (
     ODMObjectId,
     Relationship,
 )
+from pymongo import TEXT
 
 from app.user.models import User
 
@@ -21,7 +22,7 @@ class Topic(Document):
 
     class Config(Document.Config):
         indexes = [
-            IndexModel([("name", ASCENDING)], unique=True),
+            IndexModel([("name", TEXT)]),
         ]
 
 
@@ -50,6 +51,7 @@ class Post(Document):
             IndexModel([("slug", ASCENDING)], unique=True),
             IndexModel([("author", ASCENDING)]),
             IndexModel([("topics", ASCENDING)]),
+            IndexModel([("title", TEXT)]),
         ]
 
 

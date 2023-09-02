@@ -32,8 +32,6 @@ router = Blueprint("posts", __name__, url_prefix="/api/v1")
 
 
 def create_topic(topic_name: str, user: User) -> Topic:
-    topic_name = topic_name.lower()
-
     topic, created = Topic.get_or_create({"name": topic_name})
     if created:
         topic.update(raw={"$set": {"user_id": user.id}})

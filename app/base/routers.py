@@ -3,6 +3,7 @@ import os
 
 from flask import Blueprint, Response, request, send_file
 from app.base.config import MEDIA_ROOT
+from mongodb_odm.connection import get_client
 
 from app.base.utils.file import save_file
 from app.base.utils.response import ExType, custom_response, http_exception
@@ -14,6 +15,13 @@ logger = logging.getLogger(__name__)
 
 @base_api.get("/")
 def index() -> Response:
+    try:
+        get_client().admin.command("ping")
+    except Exception as e:
+        logger.critical(f"Mongo Server not available. Error{e}")
+        raise http_exception(
+            status=400, code=ExType.INTERNAL_SERVER_ERROR, detail="Database Error"
+        )
     return custom_response({"message": "Welcome to the blog post api!"}, 200)
 
 

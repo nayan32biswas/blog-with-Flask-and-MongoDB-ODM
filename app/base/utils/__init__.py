@@ -40,7 +40,7 @@ def parse_json(Schema):
         raise HTTPException(
             response=custom_response({"detail": ex.errors()}, status=422)
         )
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             response=custom_response({"detail": "Unhandled parsing error."}, status=500)
         )
