@@ -1,5 +1,4 @@
 import logging
-import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -60,7 +59,7 @@ def get_topics() -> Response:
     offset = get_offset(page, limit)
     filter: Dict[str, Any] = {}
     if q:
-        filter["name"] = re.compile(q, re.IGNORECASE)
+        filter["$text"] = {"$search": q}
 
     topic_qs = Topic.find(filter=filter, limit=limit, skip=offset)
     results = [TopicOut.from_orm(topic).dict() for topic in topic_qs]
@@ -160,7 +159,7 @@ def get_posts() -> Response:
     if topics:
         filter["topic_ids"] = {"$in": [ODMObjectId(id) for id in topics]}
     if q:
-        filter["title"] = q
+        filter["$text"] = {"$search": q}
 
     post_qs = Post.find(filter=filter, limit=limit, skip=offset)
     results = [PostListOut.from_orm(post).dict() for post in Post.load_related(post_qs)]
