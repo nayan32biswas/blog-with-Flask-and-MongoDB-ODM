@@ -16,7 +16,7 @@ from app.base.utils.string import rand_slug_str
 from app.user.auth import Auth
 from app.user.models import User
 
-from ..models import Post, Topic
+from ..models import Comment, Post, Reaction, Topic
 from ..schemas.posts import (
     PostCreate,
     PostDetailsOut,
@@ -255,5 +255,7 @@ def delete_post(slug: str) -> Response:
             code=ExType.PERMISSION_ERROR,
             detail="You don't have access to delete this post.",
         )
+    Comment.delete_many({"post_id": post.id})
+    Reaction.delete_many({"post_id": post.id})
     post.delete()
     return custom_response({"message": "Deleted"}, 200)
