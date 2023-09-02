@@ -6,7 +6,7 @@ from pydantic import BaseModel, ValidationError
 from pydantic.utils import deep_update
 from werkzeug.exceptions import HTTPException
 
-from app.base.utils.response import custom_response, http_exception
+from app.base.utils.response import custom_response
 
 
 def calculate_offset(page: int, limit: int) -> int:
@@ -40,7 +40,7 @@ def parse_json(Schema):
         raise HTTPException(
             response=custom_response({"detail": ex.errors()}, status=422)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             response=custom_response({"detail": "Unhandled parsing error."}, status=500)
         )

@@ -2,9 +2,9 @@ import logging
 import os
 
 from flask import Blueprint, Response, request, send_file
-from app.base.config import MEDIA_ROOT
 from mongodb_odm.connection import get_client
 
+from app.base.config import MEDIA_ROOT
 from app.base.utils.file import save_file
 from app.base.utils.response import ExType, custom_response, http_exception
 from app.user.auth import Auth

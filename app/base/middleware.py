@@ -1,7 +1,6 @@
 import logging
 from typing import Any
 
-
 from app.base.utils.response import ExType, http_exception
 
 logger = logging.getLogger(__name__)

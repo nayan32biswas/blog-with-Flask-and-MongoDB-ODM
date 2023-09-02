@@ -6,8 +6,8 @@ from typing import Any, Dict, Generator
 import pytest
 from mongodb_odm import connect, disconnect
 
-from app.main import app as flask_app
 from app.base import config
+from app.main import app as flask_app
 from app.user.models import User
 
 from .data import populate_dummy_data, users

@@ -15,8 +15,8 @@ from slugify import slugify
 
 from app.base.utils.decorator import timing
 from app.post.models import Comment, EmbeddedReply, Post, Reaction, Topic
-from app.user.models import User
 from app.user.auth import Auth
+from app.user.models import User
 
 fake = Faker()
 log = logging.getLogger(__name__)
