@@ -4,15 +4,17 @@ import random
 import string
 from datetime import datetime
 from functools import lru_cache
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from uuid import uuid4
 
+from bson import ObjectId
 from faker import Faker
 from mongodb_odm import InsertOne, apply_indexes
 from mongodb_odm.connection import db
+from slugify import slugify
 
 from app.base.utils.decorator import timing
-from app.post.models import Comment, EmbeddedReply, Post, Reaction, Tag
+from app.post.models import Comment, EmbeddedReply, Post, Reaction, Topic
 from app.user.models import User
 from app.user.auth import Auth
 
@@ -21,7 +23,6 @@ log = logging.getLogger(__name__)
 
 PROCESSORS = max(multiprocessing.cpu_count() - 2, 2)
 
-hash_passwords = []
 users = [
     {"username": "username_1", "full_name": fake.name(), "password": "password-one"},
     {"username": "username_2", "full_name": fake.name(), "password": "password-two"},
@@ -45,7 +46,7 @@ def get_range(N: int) -> List[int]:
     return val
 
 
-def get_random_range(total, min_item, max_item):
+def get_random_range(total: int, min_item: int, max_item: int) -> Tuple[int, int]:
     total -= 1
     lo = random.randint(0, total)
     hi = min(lo + random.randint(min_item, max_item), total)
@@ -57,21 +58,21 @@ def get_hash_password(_: Any) -> str:
 
 
 @lru_cache
-def get_user_ids():
+def get_user_ids() -> List[Any]:
     return [user["_id"] for user in User.find_raw(projection={"_id": 1})]
 
 
 @lru_cache
-def get_tag_ids():
-    return [tag["_id"] for tag in Tag.find_raw(projection={"_id": 1})]
+def get_topic_ids() -> List[Any]:
+    return [topic["_id"] for topic in Topic.find_raw(projection={"_id": 1})]
 
 
 @lru_cache
-def get_post_ids():
+def get_post_ids() -> List[Any]:
     return [post["_id"] for post in Post.find_raw(projection={"_id": 1})]
 
 
-def _create_users(total_user):
+def _create_users(total_user: Any) -> bool:
     hash_passwords = []
     for _ in range(10):
         hash_passwords.append(get_hash_password(0))
@@ -91,7 +92,8 @@ def _create_users(total_user):
                 )
             )
         )
-    User.bulk_write(requests=write_users)
+    if write_users:
+        User.bulk_write(requests=write_users)
     return True
 
 
@@ -115,50 +117,59 @@ def create_users(N: int) -> None:
     log.info(f"{N} user created")
 
 
-def create_tags(N: int) -> None:
-    data_set = {rand_str(random.randint(5, 15)).lower() for _ in range(N)}
-    if Tag.exists() is True:
-        log.info("Tag already exists")
+def create_topics(N: int) -> None:
+    data_set = {" ".join(fake.words(random.randint(1, 3))) for _ in range(N)}
+    if Topic.exists() is True:
+        log.info("Topic already exists")
         return
 
-    write_tags = [InsertOne(Tag.to_mongo(Tag(name=value))) for value in data_set]
-    Tag.bulk_write(requests=write_tags)
-    log.info(f"{len(data_set)} tag created")
+    write_topics = [
+        InsertOne(Topic.to_mongo(Topic(name=value)))
+        for idx, value in enumerate(data_set)
+    ]
+    if write_topics:
+        Topic.bulk_write(requests=write_topics)
+    log.info(f"{len(data_set)} topic created")
 
 
 def get_post() -> Dict[str, Any]:
+    title = fake.sentence()
+    description = fake.text(random.randint(1000, 10000))
     return {
-        "title": fake.sentence(),
+        "title": title,
         "publish_at": datetime.utcnow(),
-        "short_description": None,
-        "description": fake.text(),
+        "short_description": description[:200],
+        "description": description,
         "cover_image": None,
     }
 
 
-def _create_posts(total_post):
+def _create_posts(total_post: Any) -> bool:
     user_ids = get_user_ids()
-    tag_ids = [tag["_id"] for tag in Tag.find_raw(projection={"_id": 1})]
+    topic_ids = [topic["_id"] for topic in Topic.find_raw(projection={"_id": 1})]
 
     random.shuffle(user_ids)
-    random.shuffle(tag_ids)
-    total_user, total_tag = len(user_ids), len(tag_ids)
+    random.shuffle(topic_ids)
+    total_user, total_topic = len(user_ids), len(topic_ids)
 
     write_posts = []
     for i in range(total_post):
-        tag_lo, tag_hi = get_random_range(total_tag, 5, 10)
+        topic_lo, topic_hi = get_random_range(total_topic, 5, 10)
+        post_data = get_post()
         write_posts.append(
             InsertOne(
                 Post.to_mongo(
                     Post(
-                        **get_post(),
+                        **post_data,
+                        slug=f"{slugify(post_data['title'])}-{ObjectId()}",
                         author_id=user_ids[i % total_user],
-                        tag_ids=tag_ids[tag_lo:tag_hi],
+                        topic_ids=topic_ids[topic_lo:topic_hi],
                     )
                 )
             )
         )
-    Post.bulk_write(requests=write_posts)
+    if write_posts:
+        Post.bulk_write(requests=write_posts)
     return True
 
 
@@ -171,7 +182,7 @@ def create_posts(N: int) -> None:
     log.info(f"{N} post inserted")
 
 
-def _create_reactions(total_reaction):
+def _create_reactions(total_reaction: Any) -> None:
     user_ids = get_user_ids()
     post_ids = get_post_ids()
 
@@ -192,7 +203,8 @@ def _create_reactions(total_reaction):
                 )
             )
         )
-    Reaction.bulk_write(requests=write_reactions)
+    if write_reactions:
+        Reaction.bulk_write(requests=write_reactions)
 
 
 @timing
@@ -206,7 +218,7 @@ def create_reactions() -> None:
     log.info(f"{N} reaction inserted")
 
 
-def _create_comments(total_comment) -> None:
+def _create_comments(total_comment: Any) -> None:
     user_ids = get_user_ids()
     post_ids = get_post_ids()
 
@@ -237,7 +249,8 @@ def _create_comments(total_comment) -> None:
                     )
                 )
             )
-    Comment.bulk_write(requests=write_comments)
+    if write_comments:
+        Comment.bulk_write(requests=write_comments)
 
 
 @timing
@@ -254,12 +267,12 @@ def create_comments() -> None:
 
 
 @timing
-def populate_dummy_data(total_user: int = 10, total_post: int = 10) -> None:
+def populate_dummy_data(total_user: int = 100, total_post: int = 100) -> None:
     apply_indexes()
 
     log.info("Inserting data...")
     create_users(total_user)
-    create_tags(min(max(total_post // 10, 10), 100000))
+    create_topics(min(max(total_post // 10, 10), 100000))
     create_posts(total_post)
     create_reactions()
     create_comments()
