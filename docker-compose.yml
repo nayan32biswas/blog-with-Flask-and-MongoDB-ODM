@@ -5,7 +5,7 @@ x-volumes: &env-volume
   ALLOWED_HOSTS: "*"
   SECRET_KEY: "82d7c79e7e80f650d2266a66934c323fec49a27c9225a34f45939c5d7d3c501f"
 
-  MONGO_URL: "mongodb://root:password@db:27017/flask_blog_db?authSource=admin"
+  MONGO_URL: "mongodb://root:password@db:27017/blog_db?authSource=admin"
   DEBUG: "True"
 
 services:
@@ -15,7 +15,7 @@ services:
       dockerfile: ./Dockerfile
     image: nayan32biswas/flask_blog:latest
     container_name: flask_blog_server
-    command: "flask --app app.app run --host 0.0.0.0 --port 8000 --reload"
+    command: "flask --app app.main:app run --host 0.0.0.0 --port 8000 --reload"
     ports:
       - 8000:8000
     environment:
@@ -26,7 +26,7 @@ services:
     depends_on:
       - db
     networks:
-      - flask_blog-backend-tier
+      - blog-backend-tier
 
   db:
     image: mongo
@@ -40,14 +40,14 @@ services:
     expose:
       - 27017
     volumes:
-      - flask_blog-db:/data/db
+      - blog-db:/data/db
     networks:
-      - flask_blog-backend-tier
+      - blog-backend-tier
 
 volumes:
-  flask_blog-db:
+  blog-db:
     driver: local
 
 networks:
-  flask_blog-backend-tier:
+  blog-backend-tier:
     driver: bridge

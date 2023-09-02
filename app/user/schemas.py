@@ -23,6 +23,11 @@ class UpdateAccessTokenIn(BaseModel):
     refresh_token: str
 
 
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str
+
+
 class UserIn(BaseModel):
     full_name: Optional[str] = Field(default=None)
     image: Optional[str] = Field(default=None)
@@ -40,6 +45,15 @@ class UserOut(BaseModel):
 
 
 class PublicUserListOut(BaseModel):
+    username: str = Field(...)
+    full_name: str = Field(...)
+    image: Optional[str] = Field(default=None)
+
+    class Config:
+        orm_mode = True
+
+
+class PublicUserProfile(BaseModel):
     username: str = Field(...)
     full_name: str = Field(...)
     image: Optional[str] = Field(default=None)

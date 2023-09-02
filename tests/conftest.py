@@ -4,9 +4,9 @@ from functools import lru_cache
 from typing import Any, Dict, Generator
 
 import pytest
-from mongodb_odm import disconnect
+from mongodb_odm import connect, disconnect
 
-from app.app import create_app
+from app.main import app as flask_app
 from app.base import config
 from app.user.models import User
 
@@ -17,13 +17,13 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture()
 def app() -> Generator:
-    app = create_app()
-    app.config.update({"TESTING": True})
+    flask_app.config.update({"TESTING": True})
+    connect(config.MONGO_URL)
 
     if not User.exists({"username": users[0]["username"]}):
-        populate_dummy_data()
+        populate_dummy_data(total_user=10, total_post=100)
 
-    yield app
+    yield flask_app
     # clean_data()
 
     disconnect()
@@ -51,7 +51,7 @@ def get_token(client) -> str:
         json={"username": users[0]["username"], "password": users[0]["password"]},
     )
     assert response.status_code == 200
-    return str(response.json["access_token"])
+    return str(response.json.get("access_token"))
 
 
 @lru_cache(maxsize=None)
@@ -63,5 +63,4 @@ def get_header(client) -> Dict[str, Any]:
 
 
 def get_test_file_path() -> str:
-    print(config.BASE_DIR)
     return os.path.join(config.BASE_DIR, "tests/files")

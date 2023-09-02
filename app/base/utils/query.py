@@ -3,7 +3,8 @@ from typing import Any, Dict, no_type_check
 
 from mongodb_odm.exceptions import ObjectDoesNotExist
 
-from app.base.utils.response import http_exception
+from app.base.utils.response import ExType, http_exception
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,4 +20,8 @@ def get_object_or_404(
         return Model.get(filter, **kwargs)
     except ObjectDoesNotExist:
         logger.warning(f"404 on:{Model.__name__} filter:{kwargs}")
-        raise http_exception(detail=detail, status=404)
+        raise http_exception(
+            status=404,
+            code=ExType.OBJECT_NOT_FOUND,
+            detail=detail,
+        )

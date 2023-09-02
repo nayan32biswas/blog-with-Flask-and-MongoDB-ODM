@@ -3,33 +3,18 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from app.base.custom_types import ObjectIdStr
 from app.user.schemas import PublicUserListOut
 
 
-class TagIn(BaseModel):
+class TopicIn(BaseModel):
     name: str = Field(max_length=127)
 
     class Config:
         orm_mode = True
 
 
-class TagOut(BaseModel):
-    id: ObjectIdStr
+class TopicOut(BaseModel):
     name: str
-
-    class Config:
-        orm_mode = True
-
-
-class PostListOut(BaseModel):
-    id: ObjectIdStr
-    author: Optional[PublicUserListOut]
-    title: str = Field(max_length=255)
-    short_description: Optional[str] = Field(max_length=512, default=None)
-    cover_image: Optional[str] = None
-
-    publish_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True
@@ -41,9 +26,10 @@ class PostCreate(BaseModel):
     cover_image: Optional[str] = None
 
     publish_at: Optional[datetime] = None
+    publish_now: Optional[bool] = None
 
     description: Optional[str] = None
-    tag_ids: List[ObjectIdStr] = []
+    topics: List[str] = []
 
     class Config:
         orm_mode = True
@@ -55,25 +41,56 @@ class PostUpdate(BaseModel):
     cover_image: Optional[str] = None
 
     publish_at: Optional[datetime] = None
+    publish_now: Optional[bool] = None
 
     description: Optional[str] = None
-    tag_ids: List[ObjectIdStr] = []
+    topics: List[str] = []
+
+    class Config:
+        orm_mode = True
+
+
+class PostOut(BaseModel):
+    title: str = Field(max_length=255)
+    slug: str = Field(max_length=300)
+    short_description: Optional[str] = Field(max_length=512, default=None)
+    cover_image: Optional[str] = None
+
+    publish_at: Optional[datetime] = None
+    topics: List[TopicOut] = []
+
+    class Config:
+        orm_mode = True
+
+
+class PostListOut(BaseModel):
+    author: Optional[PublicUserListOut] = None
+    title: str = Field(max_length=255)
+    slug: str = Field(max_length=300)
+    short_description: Optional[str] = Field(max_length=512, default=None)
+    cover_image: Optional[str] = None
+    total_comment: int = Field(default=0)
+    total_reaction: int = Field(default=0)
+
+    publish_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True
 
 
 class PostDetailsOut(BaseModel):
-    id: ObjectIdStr
     author: Optional[PublicUserListOut] = None
+    slug: str = Field(max_length=300)
     title: str = Field(max_length=255)
     short_description: Optional[str] = Field(max_length=512, default=None)
     cover_image: Optional[str] = None
+    total_comment: int = Field(default=0)
+    total_reaction: int = Field(default=0)
 
     publish_at: Optional[datetime] = None
 
     description: Optional[str] = None
-    tags: List[TagOut] = []
+    topics: List[TopicOut] = []
 
     class Config:
         orm_mode = True

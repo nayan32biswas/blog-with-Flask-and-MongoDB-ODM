@@ -12,6 +12,10 @@ def rand_str(N: int = 12) -> str:
     )
 
 
+def rand_slug_str(N: int = 12) -> str:
+    return "".join(choice(string.ascii_lowercase + string.digits) for _ in range(N))
+
+
 def str_to_regex(s: str) -> Any:
     return re.compile(re.escape(s))
 
