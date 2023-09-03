@@ -69,12 +69,10 @@ Make sure you have docker installed and active.
 - `docker-compose run --rm api python -m app.main create-indexes` Create Indexes
 - `docker-compose up api` Run the server.
 
-
 ### Populate Database with Docker
 
 - `docker-compose run --rm api python -m app.main populate-data --total-user 1000 --total-post 1000` Populate database with 100 user and 100 post with others necessary information
 - `docker-compose run --rm api python -m app.main delete-data` Clean database if necessary.
-
 
 ## Visit API Documentation
 
@@ -111,14 +109,53 @@ Before creating PR make sure you follow those steps:
 - `poetry run scripts/lint.sh` Run linting script.
 - `poetry run scripts/format.sh` Run format test if any formatting required.
 
-## Run production server
+## Load Test
 
+### Create new Docker network
+
+```bash
+docker network create blog-database
 ```
-docker run -d --name blog_database -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=password mongo
 
-docker build -t flask-blog -f Dockerfile.prod .
-docker run --rm -d --name flask-blog -p 8000:8000 --env-file .env flask-blog
+### Run Mongodb service
 
-docker run --rm --env-file .env flask-blog python -m app.main delete-data
-docker run --rm --env-file .env flask-blog python -m app.main populate-data --total-user 10000 --total-post 10000
+`mkdir ~/mongo_blog_data` Create volume directory
+
+```bash
+docker run -d --name blog_db --hostname db \
+    --network blog-database -p 27017:27017 --expose 27017 \
+    -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=password \
+    -v ~/mongo_blog_data:/data/db \
+    mongo:6
 ```
+
+Additional command for the database container
+
+The connection URL will be
+
+- `mongodb://root:password@localhost:27017/blog_db?authSource=admin` for mongodb compass.
+- `mongodb://root:password@db:27017/blog_db?authSource=admin` for application instance.
+
+### Configure and Run Instance
+
+Build the image:
+`docker build -t nayanbiswas/flask_blog:loadtest -f Dockerfile.loadtest .`
+
+Run the newly create image with proper tagging
+
+```bash
+docker run -d --name flask_blog_api \
+    --network blog-database -p 8000:8000 --env-file .env \
+    nayanbiswas/flask_blog:loadtest
+```
+
+#### Run application script
+
+- `docker exec -it flask_blog_api python -m app.main populate-data` Populate data.
+- `docker exec -it flask_blog_api ./scripts/test.sh` Run unit-test.
+
+### Container related command
+
+- `docker start <name>` stop the service if it's stopped.
+- `docker stop <name>` Stop the service.
+- `docker rm <name>` Remove the service.
