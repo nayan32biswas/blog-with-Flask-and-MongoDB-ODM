@@ -1,11 +1,12 @@
 import logging
-from typing import Any
+from typing import Any, Optional
 
+from bson import ObjectId
 from flask import Blueprint, Response, g, request
 from mongodb_odm import ODMObjectId
 
 from app.base.custom_types import ObjectIdStr
-from app.base.utils import get_offset, parse_json
+from app.base.utils import parse_json
 from app.base.utils.query import get_object_or_404
 from app.base.utils.response import ExType, custom_response, http_exception
 from app.user.auth import Auth
@@ -45,14 +46,15 @@ def create_comments(slug: str) -> Response:
 @router.get("/posts/<string:slug>/comments")
 @Auth.auth_optional
 def get_comments(slug: str) -> Response:
-    page = int(request.args.get("page", 1))
+    after: Optional[str] = request.args.get("after", None)
     limit = int(request.args.get("limit", 20))
 
-    offset = get_offset(page, limit)
     post = get_object_or_404(Post, filter={"slug": slug})
     filter = {"post_id": post.id}
+    if after:
+        filter["_id"] = {"$lt": ObjectId(after)}
 
-    comment_qs = Comment.find(filter, sort=(("_id", -1),), skip=offset, limit=limit)
+    comment_qs = Comment.find(filter, sort=(("_id", -1),), limit=limit)
     # Load related user only
     comments = Comment.load_related(comment_qs, fields=["user"])
 
@@ -62,16 +64,18 @@ def get_comments(slug: str) -> Response:
     users_dict = {user.id: user for user in User.find({"_id": {"$in": user_ids}})}
 
     results = []
+    next_cursor = None
     for comment in comments:
+        next_cursor = comment.id
         comment_dict = comment.dict()
         for reply in comment_dict["replies"]:
             # Assign child replies
             reply["user"] = users_dict.get(reply["user_id"])
         results.append(CommentOut(**comment_dict).dict())
 
-    comment_count = Comment.count_documents(filter)
+    next_cursor = ObjectIdStr(next_cursor) if len(results) == limit else None
 
-    return custom_response({"count": comment_count, "results": results}, 200)
+    return custom_response({"after": next_cursor, "results": results}, 200)
 
 
 @router.put("/posts/<string:slug>/comments/<string:comment_id>")

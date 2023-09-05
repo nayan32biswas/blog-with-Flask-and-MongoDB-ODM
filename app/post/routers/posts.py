@@ -8,7 +8,7 @@ from mongodb_odm import ODMObjectId
 from slugify import slugify
 
 from app.base.custom_types import ObjectIdStr
-from app.base.utils import get_offset, parse_json, update_partially
+from app.base.utils import parse_json, update_partially
 from app.base.utils.query import get_object_or_404
 from app.base.utils.response import ExType, custom_response, http_exception
 from app.base.utils.string import rand_slug_str
@@ -30,21 +30,13 @@ logger = logging.getLogger(__name__)
 router = Blueprint("posts", __name__, url_prefix="/api/v1")
 
 
-def create_topic(topic_name: str, user: User) -> Topic:
-    topic, created = Topic.get_or_create({"name": topic_name})
-    if created:
-        topic.update(raw={"$set": {"user_id": user.id}})
-        topic.user_id = user.id
-    return topic
-
-
 @router.post("/topics")
 @Auth.auth_required
 def create_topics() -> Response:
     user: User = g.user
     topic_data = parse_json(TopicIn)
 
-    topic = create_topic(topic_data.name, user)
+    topic = Topic.get_or_create(topic_data.name, user)
 
     return custom_response(TopicOut.from_orm(topic).dict(), 201)
 
@@ -52,21 +44,28 @@ def create_topics() -> Response:
 @router.get("/topics")
 @Auth.auth_optional
 def get_topics() -> Response:
-    page = int(request.args.get("page", 1))
+    after: Optional[str] = request.args.get("after", None)
     limit = int(request.args.get("limit", 20))
     q = request.args.get("q")
 
-    offset = get_offset(page, limit)
     filter: Dict[str, Any] = {}
     if q:
         filter["$text"] = {"$search": q}
+    if after:
+        filter["_id"] = {"$lt": ObjectId(after)}
 
-    topic_qs = Topic.find(filter=filter, limit=limit, skip=offset)
-    results = [TopicOut.from_orm(topic).dict() for topic in topic_qs]
+    sort = [("_id", -1)]
 
-    topic_count = Topic.count_documents(filter=filter)
+    results = []
+    next_cursor = None
+    topic_qs = Topic.find(filter=filter, sort=sort, limit=limit)
+    for topic in topic_qs:
+        next_cursor = topic.id
+        results.append(TopicOut.from_orm(topic).dict())
 
-    return custom_response({"count": topic_count, "results": results}, 200)
+    next_cursor = ObjectIdStr(next_cursor) if len(results) == limit else None
+
+    return custom_response({"after": next_cursor, "results": results}, 200)
 
 
 def get_short_description(description: Optional[str]) -> str:
@@ -78,7 +77,7 @@ def get_short_description(description: Optional[str]) -> str:
 def get_or_create_post_topics(topics_name: List[str], user: User) -> List[Topic]:
     topics: List[Topic] = []
     for topic_name in topics_name:
-        topic = create_topic(topic_name, user)
+        topic = Topic.get_or_create(topic_name, user)
         if topic:
             topics.append(topic)
     return topics
@@ -144,29 +143,52 @@ def create_posts() -> Response:
 @router.get("/posts")
 @Auth.auth_optional
 def get_posts() -> Response:
-    page = int(request.args.get("page", 1))
+    user = g.user
+
+    after: Optional[str] = request.args.get("after", None)
     limit = int(request.args.get("limit", 20))
     q = request.args.get("q")
     topics = request.args.getlist("topics")
-    author_id = request.args.get("author_id")
+    username = request.args.get("username")
 
-    offset = get_offset(page, limit)
     filter: Dict[str, Any] = {
         "publish_at": {"$ne": None, "$lt": datetime.utcnow()},
     }
-    if author_id:
-        filter["author_id"] = ObjectId(author_id)
+    if username:
+        if user and user.username == username:
+            filter["author_id"] = user.id
+            filter.pop("publish_at")
+        else:
+            user = User.get({"username": username})
+            filter["author_id"] = user.id
     if topics:
-        filter["topic_ids"] = {"$in": [ODMObjectId(id) for id in topics]}
+        topic_ids = [
+            ODMObjectId(obj["_id"])
+            for obj in Topic.find_raw({"slug": {"$in": topics}}, projection={"slug": 1})
+        ]
+        filter["topic_ids"] = {"$in": topic_ids}
     if q:
         filter["$text"] = {"$search": q}
+    if after:
+        filter["_id"] = {"$lt": ObjectId(after)}
 
-    post_qs = Post.find(filter=filter, limit=limit, skip=offset)
-    results = [PostListOut.from_orm(post).dict() for post in Post.load_related(post_qs)]
+    sort = [("_id", -1)]
 
-    post_count = Post.count_documents(filter=filter)
+    post_qs = Post.find(
+        filter=filter,
+        sort=sort,
+        limit=limit,
+        projection={"description": 0},
+    )
+    results = []
+    next_cursor = None
+    for post in Post.load_related(post_qs):
+        next_cursor = post.id
+        results.append(PostListOut.from_orm(post).dict())
 
-    return custom_response({"count": post_count, "results": results}, 200)
+    next_cursor = ObjectIdStr(next_cursor) if len(results) == limit else None
+
+    return custom_response({"after": next_cursor, "results": results}, 200)
 
 
 @router.get("/posts/<string:slug>")

@@ -9,16 +9,6 @@ from werkzeug.exceptions import HTTPException
 from app.base.utils.response import custom_response
 
 
-def calculate_offset(page: int, limit: int) -> int:
-    return (page - 1) * limit
-
-
-def get_offset(page: int, limit: int) -> int:
-    if not 1 <= limit <= 100:
-        raise ValueError("Invalid pagination limit")
-    return calculate_offset(page, limit)
-
-
 @no_type_check
 def update_partially(target, source: BaseModel, exclude: Optional[Any] = None):
     cls = target.__class__

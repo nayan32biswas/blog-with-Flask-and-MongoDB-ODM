@@ -15,6 +15,7 @@ class TopicIn(BaseModel):
 
 class TopicOut(BaseModel):
     name: str
+    slug: str
 
     class Config:
         orm_mode = True

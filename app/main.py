@@ -2,6 +2,7 @@ import logging
 from logging.config import dictConfig
 
 from flask import Flask
+from flask_cors import CORS
 from mongodb_odm import connect, disconnect
 
 from app.base import config
@@ -31,6 +32,8 @@ def create_app() -> Flask:
 app = create_app()
 
 app.register_error_handler(500, catch_exceptions_middleware)
+
+CORS(app, resources={r"/api/*": {"origins": config.ALLOWED_HOSTS}})
 
 if __name__ == "__main__":
     print("new connection")
