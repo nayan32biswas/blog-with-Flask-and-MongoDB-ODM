@@ -2,7 +2,7 @@ version: "3.7"
 
 # environment
 x-volumes: &env-volume
-  ALLOWED_HOSTS: "*"
+  ALLOWED_HOSTS: "http://localhost:3000"
   SECRET_KEY: "82d7c79e7e80f650d2266a66934c323fec49a27c9225a34f45939c5d7d3c501f"
 
   MONGO_URL: "mongodb://root:password@db:27017/blog_db?authSource=admin"

@@ -18,6 +18,7 @@ typer = "0.7.0"
 types-python-slugify = "^8.0.0.3"
 # mongodb-odm = "0.2.2"
 mongodb-odm = { git = "https://github.com/nayan32biswas/mongodb-odm.git", rev = "main" }
+flask-cors = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
