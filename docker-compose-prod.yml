@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.prod
+    image: nayanbiswas/flask_blog_prod:latest
+    container_name: flask_blog_prod_server
+    command: "gunicorn -c app/gunicorn_config.py app.main:app"
+    ports:
+      - 8000:8000
+    env_file: .env
+    depends_on:
+      - db
+    networks:
+      - blog-backend-tier
+
+  db:
+    image: mongo:6
+    # restart: always
+    container_name: flask_blog_prod_db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - 27017:27017
+    expose:
+      - 27017
+    volumes:
+      - blog-db:/data/db
+    networks:
+      - blog-backend-tier
+
+volumes:
+  blog-db:
+    driver: local
+
+networks:
+  blog-backend-tier:
+    driver: bridge

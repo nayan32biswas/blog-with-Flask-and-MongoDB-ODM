@@ -1,0 +1,8 @@
+.venv**
+
+.git
+**/log
+**/media
+**/static
+
+.vscode
