@@ -76,7 +76,7 @@ class Post(Document):
             IndexModel([("slug", ASCENDING)], unique=True),
             IndexModel([("author", ASCENDING)]),
             IndexModel([("topics", ASCENDING)]),
-            IndexModel([("title", TEXT)]),
+            IndexModel([("title", TEXT), ("short_description", TEXT)]),
         ]
 
 
