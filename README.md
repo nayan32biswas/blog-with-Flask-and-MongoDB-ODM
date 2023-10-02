@@ -111,13 +111,13 @@ Before creating PR make sure you follow those steps:
 
 ## Load Test
 
-### Create new Docker network
+### Configure Common Database
 
 ```bash
 docker network create blog-database
 ```
 
-### Run Mongodb service
+#### Run Mongodb service
 
 `mkdir ~/mongo_blog_data` Create volume directory
 
@@ -136,23 +136,29 @@ The connection URL will be
 - `mongodb://root:password@localhost:27017/blog_db?authSource=admin` for mongodb compass.
 - `mongodb://root:password@db:27017/blog_db?authSource=admin` for application instance.
 
+#### Populate database
+
+```bash
+docker build -t nayanbiswas/flask_blog:latest -f Dockerfile .
+
+docker run --rm --network blog-database --env-file .env nayanbiswas/flask_blog:latest \
+ python -m app.main populate-data --total-user=100000 --total-post=100000
+```
+
 ### Configure and Run Instance
 
 Build the image:
-`docker build -t nayanbiswas/flask_blog:loadtest -f Dockerfile.loadtest .`
+`docker build -t nayanbiswas/flask_blog_prod:latest -f Dockerfile.prod .`
 
 Run the newly create image with proper tagging
 
 ```bash
 docker run -d --name flask_blog_api \
     --network blog-database -p 8000:8000 --env-file .env \
-    nayanbiswas/flask_blog:loadtest
+    nayanbiswas/flask_blog_prod:latest
 ```
 
 #### Run application script
-
-- `docker exec -it flask_blog_api python -m app.main populate-data` Populate data.
-- `docker exec -it flask_blog_api ./scripts/test.sh` Run unit-test.
 
 ### Container related command
 

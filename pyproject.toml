@@ -7,22 +7,22 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-Faker = "18.3.2"
-flask = "^2.2.3"
-gunicorn = "20.1.0"
-pydantic = "~1.10.7"
-pyjwt = "~2.6.0"
-pymongo = { version = "~4.3.3", extras = ["srv"] }
-python-slugify = "^8.0.1"
-typer = "0.7.0"
-types-python-slugify = "^8.0.0.3"
-# mongodb-odm = "0.2.2"
-mongodb-odm = { git = "https://github.com/nayan32biswas/mongodb-odm.git", rev = "main" }
+flask = "^3.0.0"
 flask-cors = "^4.0.0"
+gunicorn = "^20.1.0"
+pydantic = "^1.10.13"
+pyjwt = "^2.6.0"
+pymongo = { version = "^4.3.3", extras = ["srv"] }
+python-slugify = "^8.0.1"
+typer = "^0.7.0"
+types-python-slugify = "^8.0.0.3"
+# mongodb-odm = "0.2.4"
+mongodb-odm = { git = "https://github.com/nayan32biswas/mongodb-odm.git", rev = "main" }
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
 coverage = { extras = ["toml"], version = "^7.2.2" }
+Faker = "^19.6.2"
 flake8 = "^5.0.4"
 isort = "^5.12.0"
 mypy = "1.1.1"
