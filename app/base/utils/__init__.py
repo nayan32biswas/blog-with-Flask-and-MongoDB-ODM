@@ -29,8 +29,8 @@ def parse_json(Schema):
     except ValidationError as ex:
         raise HTTPException(
             response=custom_response({"detail": ex.errors()}, status=422)
-        )
-    except Exception:
+        ) from ex
+    except Exception as e:
         raise HTTPException(
             response=custom_response({"detail": "Unhandled parsing error."}, status=500)
-        )
+        ) from e

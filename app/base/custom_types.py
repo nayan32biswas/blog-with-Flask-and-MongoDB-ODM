@@ -15,7 +15,7 @@ class ObjectIdStr(str):
         elif isinstance(v, str):
             try:
                 ObjectId(v)
-            except Exception:
-                raise TypeError("Invalid ObjectId")
+            except Exception as e:
+                raise TypeError("Invalid ObjectId") from e
             return v
         raise TypeError("ObjectId required")

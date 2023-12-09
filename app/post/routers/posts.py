@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from bson import ObjectId
 from flask import Blueprint, Response, g, request
@@ -30,13 +30,38 @@ logger = logging.getLogger(__name__)
 router = Blueprint("posts", __name__, url_prefix="/api/v1")
 
 
+def get_or_create_topic(
+    topic_name: str, user: Optional[User] = None
+) -> Tuple[Topic, bool]:
+    user_id = user.id if user else None
+    try:
+        topic = Topic.get({"name": topic_name})
+        return topic, False
+    except Exception:
+        pass
+    slug = slugify(topic_name)
+    for i in range(3, 20):
+        try:
+            return (
+                Topic(
+                    name=topic_name,
+                    slug=f"{slug}-{rand_slug_str(i)}",
+                    user_id=user_id,
+                ).create(),
+                True,
+            )
+        except Exception:
+            pass
+    raise Exception("Unable to create the Topic")
+
+
 @router.post("/topics")
 @Auth.auth_required
 def create_topics() -> Response:
     user: User = g.user
     topic_data = parse_json(TopicIn)
 
-    topic = Topic.get_or_create(topic_data.name, user)
+    topic, _ = get_or_create_topic(topic_name=topic_data.name, user=user)
 
     return custom_response(TopicOut.from_orm(topic).dict(), 201)
 
@@ -63,9 +88,9 @@ def get_topics() -> Response:
         next_cursor = topic.id
         results.append(TopicOut.from_orm(topic).dict())
 
-    next_cursor = ObjectIdStr(next_cursor) if len(results) == limit else None
+    next_cursor = next_cursor if len(results) == limit else None
 
-    return custom_response({"after": next_cursor, "results": results}, 200)
+    return custom_response({"after": ObjectIdStr(next_cursor), "results": results}, 200)
 
 
 def get_short_description(description: Optional[str]) -> str:
@@ -77,7 +102,7 @@ def get_short_description(description: Optional[str]) -> str:
 def get_or_create_post_topics(topics_name: List[str], user: User) -> List[Topic]:
     topics: List[Topic] = []
     for topic_name in topics_name:
-        topic = Topic.get_or_create(topic_name, user)
+        topic, _ = get_or_create_topic(topic_name=topic_name, user=user)
         if topic:
             topics.append(topic)
     return topics
@@ -186,9 +211,9 @@ def get_posts() -> Response:
         next_cursor = post.id
         results.append(PostListOut.from_orm(post).dict())
 
-    next_cursor = ObjectIdStr(next_cursor) if len(results) == limit else None
+    next_cursor = next_cursor if len(results) == limit else None
 
-    return custom_response({"after": next_cursor, "results": results}, 200)
+    return custom_response({"after": ObjectIdStr(next_cursor), "results": results}, 200)
 
 
 @router.get("/posts/<string:slug>")
@@ -210,12 +235,12 @@ def get_post_details(slug: str) -> Response:
                     detail="You don't have permission to get this object.",
                 )
         post.author = User.get({"_id": post.author_id})
-    except Exception:
+    except Exception as e:
         raise http_exception(
             status=404,
             code=ExType.OBJECT_NOT_FOUND,
             detail="Object not found.",
-        )
+        ) from e
     post.topics = [
         TopicOut.from_orm(topic)
         for topic in Topic.find({"_id": {"$in": post.topic_ids}})

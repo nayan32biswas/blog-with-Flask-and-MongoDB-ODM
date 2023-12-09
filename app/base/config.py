@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-ALLOWED_IMAGES = set(["png", "jpg", "jpeg", "gif"])
+ALLOWED_IMAGES = {"png", "jpg", "jpeg", "gif"}
 
 LOG_LEVEL = "INFO" if DEBUG is True else "INFO"
 

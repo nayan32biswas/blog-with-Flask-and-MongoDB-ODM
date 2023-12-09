@@ -21,7 +21,7 @@ def index() -> Response:
         logger.critical(f"Mongo Server not available. Error{e}")
         raise http_exception(
             status=400, code=ExType.INTERNAL_SERVER_ERROR, detail="Database Error"
-        )
+        ) from e
     return custom_response({"message": "Welcome to the blog post api!"}, 200)
 
 
@@ -39,7 +39,7 @@ def create_upload_image() -> Response:
 
 @base_api.get("/media/<path:file_path>")
 @Auth.auth_optional
-def get_image(file_path) -> Response:
+def get_image(file_path: str) -> Response:
     file_path = f"{MEDIA_ROOT}/{file_path}"
     if os.path.isfile(file_path):
         return send_file(file_path)

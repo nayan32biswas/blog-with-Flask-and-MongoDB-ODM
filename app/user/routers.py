@@ -50,7 +50,7 @@ def create() -> Response:
             status=400,
             code=ExType.AUTHENTICATION_ERROR,
             detail="Something wrong try again",
-        )
+        ) from ex
 
     return custom_response(UserOut.from_orm(user).dict(), 201)
 
