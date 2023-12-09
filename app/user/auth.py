@@ -93,10 +93,10 @@ class Auth:
             payload: Any = jwt.decode(
                 token, config.SECRET_KEY, algorithms=[config.ALGORITHM]
             )
-        except jwt.ExpiredSignatureError:
-            raise credentials_exception
-        except jwt.InvalidTokenError:
-            raise credentials_exception
+        except jwt.ExpiredSignatureError as e:
+            raise credentials_exception from e
+        except jwt.InvalidTokenError as e:
+            raise credentials_exception from e
         id: str = payload.get("id")
         random_str: str = payload.get("random_str")
         token_type = payload.get("token_type")
@@ -124,8 +124,8 @@ class Auth:
     def create_access_token_from_refresh_token(refresh_token: str) -> str:
         try:
             token_data = Auth.decode_token(refresh_token)
-        except Exception:
-            raise invalid_refresh_token
+        except Exception as e:
+            raise invalid_refresh_token from e
         if token_data.token_type != TokenType.REFRESH.value:
             raise invalid_refresh_token
 

@@ -11,10 +11,7 @@ from mongodb_odm import (
     Relationship,
 )
 from pymongo import TEXT
-from slugify import slugify
-from typing_extensions import Self
 
-from app.base.utils.string import rand_slug_str
 from app.user.models import User
 
 
@@ -29,26 +26,6 @@ class Topic(Document):
             IndexModel([("slug", ASCENDING)], unique=True),
             IndexModel([("name", TEXT)]),
         ]
-
-    @classmethod
-    def get_or_create(cls, topic_name: str, user: Optional[User] = None) -> Self:
-        user_id = user.id if user else None
-        try:
-            topic = Topic.get({"name": topic_name})
-            return topic
-        except Exception:
-            pass
-        slug = slugify(topic_name)
-        for i in range(3, 20):
-            try:
-                return Topic(
-                    name=topic_name,
-                    slug=f"{slug}-{rand_slug_str(i)}",
-                    user_id=user_id,
-                ).create()
-            except Exception:
-                pass
-        raise Exception("Unable to create the Topic")
 
 
 class Post(Document):

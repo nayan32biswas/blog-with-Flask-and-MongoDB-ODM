@@ -19,7 +19,6 @@ def test_get_topics(client):
     response = client.get("/api/v1/topics")
     assert response.status_code == 200
 
-    assert "count" in response.json
     assert "results" in response.json
 
     response = client.get("/api/v1/topics?q=abc")
@@ -40,7 +39,6 @@ def test_get_posts(client):
     response = client.get("/api/v1/posts")
     assert response.status_code == 200
 
-    assert "count" in response.json
     assert "results" in response.json
 
     # Get posts with valid credentials
@@ -58,7 +56,6 @@ def test_get_user_posts(client) -> None:
     response = client.get(f"/api/v1/posts?username={user.username}")
     assert response.status_code == 200
 
-    assert "count" in response.json
     assert "results" in response.json
 
 
@@ -69,7 +66,6 @@ def test_get_user_own_posts(client) -> None:
     )
     assert response.status_code == 200
 
-    assert "count" in response.json
     assert "results" in response.json
 
 

@@ -17,10 +17,10 @@ def get_object_or_404(
 ):
     try:
         return Model.get(filter, **kwargs)
-    except ObjectDoesNotExist:
+    except ObjectDoesNotExist as e:
         logger.warning(f"404 on:{Model.__name__} filter:{kwargs}")
         raise http_exception(
             status=404,
             code=ExType.OBJECT_NOT_FOUND,
             detail=detail,
-        )
+        ) from e
