@@ -23,8 +23,8 @@ def get_name_and_extension(filename: Optional[str]) -> Tuple[str, str]:
 
 
 def get_folder_path(root_folder: str) -> str:
-    base64_month = base64(datetime.utcnow().strftime("%Y%m"))
-    # now = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
+    base64_month = base64(datetime.now().strftime("%Y%m"))
+    # now = datetime.now().strftime("%Y%m%d%H%M%S%f")
     return f"{root_folder}/{base64_month}"
 
 

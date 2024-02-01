@@ -12,7 +12,7 @@ fake = Faker()
 
 
 def get_published_filter():
-    return {"publish_at": {"$ne": None, "$lte": datetime.utcnow()}}
+    return {"publish_at": {"$ne": None, "$lte": datetime.now()}}
 
 
 def test_get_topics(client):

@@ -3,9 +3,8 @@ from typing import Any, Optional
 
 from bson import ObjectId
 from flask import Blueprint, Response, g, request
-from mongodb_odm import ODMObjectId
+from mongodb_odm import ObjectIdStr, ODMObjectId
 
-from app.base.custom_types import ObjectIdStr
 from app.base.utils import parse_json
 from app.base.utils.query import get_object_or_404
 from app.base.utils.response import ExType, custom_response, http_exception
@@ -40,7 +39,7 @@ def create_comments(slug: str) -> Response:
 
     comment.user = user
 
-    return custom_response(CommentOut.from_orm(comment).dict(), 201)
+    return custom_response(CommentOut(**comment.model_dump()).model_dump(), 201)
 
 
 @router.get("/posts/<string:slug>/comments")
@@ -67,11 +66,11 @@ def get_comments(slug: str) -> Response:
     next_cursor = None
     for comment in comments:
         next_cursor = comment.id
-        comment_dict = comment.dict()
+        comment_dict = comment.model_dump()
         for reply in comment_dict["replies"]:
             # Assign child replies
             reply["user"] = users_dict.get(reply["user_id"])
-        results.append(CommentOut(**comment_dict).dict())
+        results.append(CommentOut(**comment_dict).model_dump())
 
     next_cursor = next_cursor if len(results) == limit else None
 
@@ -101,9 +100,8 @@ def update_comments(slug: str, comment_id: ObjectIdStr) -> Response:
 
     comment.description = comment_data.description
     comment.update()
-    comment.user = user
 
-    return custom_response(CommentOut.from_orm(comment).dict(), 200)
+    return custom_response({"message": "Comment Updated"}, 200)
 
 
 @router.delete("/posts/<string:slug>/comments/<string:comment_id>")
@@ -155,13 +153,13 @@ def create_replies(slug: str, comment_id: ObjectIdStr) -> Response:
 
     reply_dict = EmbeddedReply(
         id=ODMObjectId(), user_id=user.id, description=reply_data.description
-    ).dict()
+    ).model_dump()
     comment.update(raw={"$push": {"replies": reply_dict}})
 
-    reply_dict["user"] = user.dict()
+    reply_dict["user"] = user.model_dump()
     reply_out = ReplyOut(**reply_dict)
 
-    return custom_response(reply_out.dict(), 201)
+    return custom_response(reply_out.model_dump(), 201)
 
 
 @router.put(

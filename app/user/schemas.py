@@ -40,23 +40,14 @@ class UserOut(BaseModel):
 
     is_active: bool = True
 
-    class Config:
-        orm_mode = True
-
 
 class PublicUserListOut(BaseModel):
     username: str = Field(...)
     full_name: str = Field(...)
     image: Optional[str] = Field(default=None)
 
-    class Config:
-        orm_mode = True
-
 
 class PublicUserProfile(BaseModel):
     username: str = Field(...)
     full_name: str = Field(...)
     image: Optional[str] = Field(default=None)
-
-    class Config:
-        orm_mode = True

@@ -9,16 +9,10 @@ from app.user.schemas import PublicUserListOut
 class TopicIn(BaseModel):
     name: str = Field(max_length=127)
 
-    class Config:
-        orm_mode = True
-
 
 class TopicOut(BaseModel):
     name: str
     slug: str
-
-    class Config:
-        orm_mode = True
 
 
 class PostCreate(BaseModel):
@@ -32,9 +26,6 @@ class PostCreate(BaseModel):
     description: Optional[str] = None
     topics: List[str] = []
 
-    class Config:
-        orm_mode = True
-
 
 class PostUpdate(BaseModel):
     title: Optional[str] = Field(default=None, max_length=255)
@@ -47,9 +38,6 @@ class PostUpdate(BaseModel):
     description: Optional[str] = None
     topics: List[str] = []
 
-    class Config:
-        orm_mode = True
-
 
 class PostOut(BaseModel):
     title: str = Field(max_length=255)
@@ -59,9 +47,6 @@ class PostOut(BaseModel):
 
     publish_at: Optional[datetime] = None
     topics: List[TopicOut] = []
-
-    class Config:
-        orm_mode = True
 
 
 class PostListOut(BaseModel):
@@ -74,9 +59,6 @@ class PostListOut(BaseModel):
     total_reaction: int = Field(default=0)
 
     publish_at: Optional[datetime] = None
-
-    class Config:
-        orm_mode = True
 
 
 class PostDetailsOut(BaseModel):
@@ -92,6 +74,3 @@ class PostDetailsOut(BaseModel):
 
     description: Optional[str] = None
     topics: List[TopicOut] = []
-
-    class Config:
-        orm_mode = True

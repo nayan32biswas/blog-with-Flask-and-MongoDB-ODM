@@ -28,10 +28,42 @@ services:
     networks:
       - blog-backend-tier
 
+  # db:
+  #   image: mongo:5
+  #   # restart: always
+  #   container_name: flask_blog_db_5
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: root
+  #     MONGO_INITDB_ROOT_PASSWORD: password
+  #   ports:
+  #     - 27017:27017
+  #   expose:
+  #     - 27017
+  #   volumes:
+  #     - blog-db-5:/data/db
+  #   networks:
+  #     - blog-backend-tier
+
+  # db:
+  #   image: mongo:6
+  #   # restart: always
+  #   container_name: flask_blog_db_6
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: root
+  #     MONGO_INITDB_ROOT_PASSWORD: password
+  #   ports:
+  #     - 27017:27017
+  #   expose:
+  #     - 27017
+  #   volumes:
+  #     - blog-db-6:/data/db
+  #   networks:
+  #     - blog-backend-tier
+
   db:
-    image: mongo:6
+    image: mongo:7
     # restart: always
-    container_name: flask_blog_db
+    container_name: flask_blog_db_7
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
@@ -40,12 +72,16 @@ services:
     expose:
       - 27017
     volumes:
-      - blog-db:/data/db
+      - blog-db-7:/data/db
     networks:
       - blog-backend-tier
 
 volumes:
-  blog-db:
+  blog-db-5:
+    driver: local
+  blog-db-6:
+    driver: local
+  blog-db-7:
     driver: local
 
 networks:

@@ -4,10 +4,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from bson import ObjectId
 from flask import Blueprint, Response, g, request
-from mongodb_odm import ODMObjectId
+from mongodb_odm import ObjectIdStr, ODMObjectId
 from slugify import slugify
 
-from app.base.custom_types import ObjectIdStr
 from app.base.utils import parse_json, update_partially
 from app.base.utils.query import get_object_or_404
 from app.base.utils.response import ExType, custom_response, http_exception
@@ -63,7 +62,7 @@ def create_topics() -> Response:
 
     topic, _ = get_or_create_topic(topic_name=topic_data.name, user=user)
 
-    return custom_response(TopicOut.from_orm(topic).dict(), 201)
+    return custom_response(TopicOut(**topic.model_dump()).model_dump(), 201)
 
 
 @router.get("/topics")
@@ -86,7 +85,7 @@ def get_topics() -> Response:
     topic_qs = Topic.find(filter=filter, sort=sort, limit=limit)
     for topic in topic_qs:
         next_cursor = topic.id
-        results.append(TopicOut.from_orm(topic).dict())
+        results.append(TopicOut(**topic.model_dump()).model_dump())
 
     next_cursor = next_cursor if len(results) == limit else None
 
@@ -121,7 +120,7 @@ def create_posts() -> Response:
 
     topics = get_or_create_post_topics(post_data.topics, user)
 
-    if post_data.publish_at and post_data.publish_at < datetime.utcnow():
+    if post_data.publish_at and post_data.publish_at < datetime.now():
         raise http_exception(
             status=400,
             detail="Please choose future date.",
@@ -129,7 +128,7 @@ def create_posts() -> Response:
             field="publish_at",
         )
     if post_data.publish_now:
-        post_data.publish_at = datetime.utcnow()
+        post_data.publish_at = datetime.now()
 
     post = Post(
         author_id=user.id,
@@ -162,7 +161,7 @@ def create_posts() -> Response:
             field="title",
         )
     post.topics = topics
-    return custom_response(PostOut.from_orm(post).dict(), 201)
+    return custom_response(PostOut(**post.model_dump()).model_dump(), 201)
 
 
 @router.get("/posts")
@@ -177,7 +176,7 @@ def get_posts() -> Response:
     username = request.args.get("username")
 
     filter: Dict[str, Any] = {
-        "publish_at": {"$ne": None, "$lt": datetime.utcnow()},
+        "publish_at": {"$ne": None, "$lt": datetime.now()},
     }
     if username:
         if user and user.username == username:
@@ -209,7 +208,7 @@ def get_posts() -> Response:
     next_cursor = None
     for post in Post.load_related(post_qs):
         next_cursor = post.id
-        results.append(PostListOut.from_orm(post).dict())
+        results.append(PostListOut(**post.model_dump()).model_dump())
 
     next_cursor = next_cursor if len(results) == limit else None
 
@@ -222,12 +221,12 @@ def get_post_details(slug: str) -> Response:
     user = g.user
     filter: Dict[str, Any] = {
         "slug": slug,
-        # "publish_at": {"$ne": None, "$lt": datetime.utcnow()},
+        # "publish_at": {"$ne": None, "$lt": datetime.now()},
     }
 
     try:
         post = Post.get(filter=filter)
-        if post.publish_at is None or post.publish_at > datetime.utcnow():
+        if post.publish_at is None or post.publish_at > datetime.now():
             if user is None or user.id != post.author_id:
                 raise http_exception(
                     status=403,
@@ -242,11 +241,11 @@ def get_post_details(slug: str) -> Response:
             detail="Object not found.",
         ) from e
     post.topics = [
-        TopicOut.from_orm(topic)
+        TopicOut(**topic.model_dump())
         for topic in Topic.find({"_id": {"$in": post.topic_ids}})
     ]
 
-    return custom_response(PostDetailsOut.from_orm(post).dict(), 200)
+    return custom_response(PostDetailsOut(**post.model_dump()).model_dump(), 200)
 
 
 @router.patch("/posts/<string:slug>")
@@ -265,7 +264,7 @@ def update_posts(slug: ObjectIdStr) -> Response:
         )
 
     if post_data.publish_at and post.publish_at != post_data.publish_at:
-        if post_data.publish_at < datetime.utcnow():
+        if post_data.publish_at < datetime.now():
             raise http_exception(
                 status=400,
                 detail="Please choose future date.",
@@ -273,7 +272,7 @@ def update_posts(slug: ObjectIdStr) -> Response:
                 field="publish_at",
             )
     if post_data.publish_now:
-        post_data.publish_at = datetime.utcnow()
+        post_data.publish_at = datetime.now()
 
     post = update_partially(post, post_data)
 
