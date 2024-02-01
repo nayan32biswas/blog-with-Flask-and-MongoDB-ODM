@@ -50,7 +50,7 @@ class Auth:
 
     @staticmethod
     def create_token(data: Dict[str, Any], exp: datetime) -> str:
-        data["iat"] = datetime.utcnow()
+        data["iat"] = datetime.now()
         data["exp"] = exp
         return jwt.encode(data, config.SECRET_KEY, algorithm=config.ALGORITHM)
 
@@ -72,9 +72,7 @@ class Auth:
             "random_str": user.random_str,
             "token_type": TokenType.ACCESS,
         }
-        expire = datetime.utcnow() + timedelta(
-            minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        expire = datetime.now() + timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
         return Auth.create_token(token_data, exp=expire)
 
     @staticmethod
@@ -84,7 +82,7 @@ class Auth:
             "random_str": user.random_str,
             "token_type": TokenType.REFRESH,
         }
-        expire = datetime.utcnow() + timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS)
+        expire = datetime.now() + timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS)
         return Auth.create_token(token_data, exp=expire)
 
     @staticmethod

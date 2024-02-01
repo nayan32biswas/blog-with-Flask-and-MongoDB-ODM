@@ -18,9 +18,9 @@ class User(Document):
     # random_str will be used to log out from all devices.
     random_str: Optional[str] = Field(default=None, max_length=64)
 
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.now)
 
-    class Config(Document.Config):
+    class ODMConfig(Document.ODMConfig):
         collection_name = "user"
         indexes = [
             IndexModel([("username", ASCENDING)], unique=True),

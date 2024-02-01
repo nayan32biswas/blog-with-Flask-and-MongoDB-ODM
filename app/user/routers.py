@@ -40,7 +40,7 @@ def create() -> Response:
         user = User(
             username=res_data.username,
             full_name=res_data.full_name,
-            joining_date=datetime.utcnow(),
+            joining_date=datetime.now(),
             password=hash_password,
             random_str=User.new_random_str(),
         ).create()
@@ -52,7 +52,7 @@ def create() -> Response:
             detail="Something wrong try again",
         ) from ex
 
-    return custom_response(UserOut.from_orm(user).dict(), 201)
+    return custom_response(UserOut(**user.model_dump()).model_dump(), 201)
 
 
 def token_response(username: str, password: str) -> Any:
@@ -65,7 +65,7 @@ def token_response(username: str, password: str) -> Any:
         )
     access_token = Auth.create_access_token(user)
     refresh_token = Auth.create_refresh_token(user)
-    user.update(raw={"$set": {"last_login": datetime.utcnow()}})
+    user.update(raw={"$set": {"last_login": datetime.now()}})
     return {
         "token_type": "Bearer",
         "access_token": access_token,
@@ -114,7 +114,8 @@ def change_password() -> Any:
 @user_api.get("/me")
 @Auth.auth_required
 def ger_me() -> Response:
-    return custom_response(UserOut.from_orm(g.user).dict(), 200)
+    user = g.user
+    return custom_response(UserOut(**user.model_dump()).model_dump(), 200)
 
 
 @user_api.patch("/update-me")
@@ -125,7 +126,7 @@ def update_user() -> Response:
     user = g.user
     user = update_partially(user, user_data)
     user.update()
-    return custom_response(UserOut.from_orm(user).dict(), 200)
+    return custom_response(UserOut(**user.model_dump()).model_dump(), 200)
 
 
 @user_api.put("/logout-from-all-device")
@@ -140,4 +141,4 @@ def logout_from_all_device() -> Response:
 @user_api.get("/users/<string:username>")
 def ger_user_public_profile(username: str) -> Any:
     public_user = get_object_or_404(User, filter={"username": username})
-    return custom_response(PublicUserProfile.from_orm(public_user).dict())
+    return custom_response(PublicUserProfile(**public_user.model_dump()).model_dump())

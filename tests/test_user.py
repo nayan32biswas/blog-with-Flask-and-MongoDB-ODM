@@ -123,7 +123,7 @@ def test_token_validation(client) -> None:
     response = client.get("/api/v1/me")
     assert response.status_code == 401
 
-    exp = datetime.utcnow() + timedelta(hours=1)
+    exp = datetime.now() + timedelta(hours=1)
     invalid_access_token = Auth.create_token({}, exp=exp)
     invalid_refresh_token = Auth.create_token({}, exp=exp)
     response = client.get(

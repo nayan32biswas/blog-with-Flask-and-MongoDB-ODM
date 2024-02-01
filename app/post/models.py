@@ -21,7 +21,7 @@ class Topic(Document):
     slug: str = Field(...)
     description: Optional[str] = Field(default=None)
 
-    class Config(Document.Config):
+    class ODMConfig(Document.ODMConfig):
         indexes = [
             IndexModel([("slug", ASCENDING)], unique=True),
             IndexModel([("name", TEXT)]),
@@ -43,12 +43,12 @@ class Post(Document):
 
     topic_ids: List[ODMObjectId] = []
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
 
     author: Optional[User] = Relationship(local_field="author_id")
 
-    class Config(Document.Config):
+    class ODMConfig(Document.ODMConfig):
         indexes = [
             IndexModel([("slug", ASCENDING)], unique=True),
             IndexModel([("author", ASCENDING)]),
@@ -62,8 +62,8 @@ class EmbeddedReply(BaseModel):
     user_id: ODMObjectId = Field(...)
     description: str = Field(...)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
 
 
 class Comment(Document):
@@ -73,13 +73,13 @@ class Comment(Document):
     replies: List[EmbeddedReply] = []
     description: str = Field(...)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
 
     post: Optional[Post] = Relationship(local_field="post_id")
     user: Optional[User] = Relationship(local_field="user_id")
 
-    class Config(Document.Config):
+    class ODMConfig(Document.ODMConfig):
         collection_name = "comment"
         indexes = [
             IndexModel([("post_id", ASCENDING)]),
@@ -92,7 +92,7 @@ class Reaction(Document):
 
     post: Optional[Post] = Relationship(local_field="post_id")
 
-    class Config(Document.Config):
+    class ODMConfig(Document.ODMConfig):
         collection_name = "reaction"
         indexes = [
             IndexModel([("post_id", ASCENDING)]),

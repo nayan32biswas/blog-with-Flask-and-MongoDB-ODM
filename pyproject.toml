@@ -6,32 +6,32 @@ authors = ["Nayan Biswas <nayan32biswas@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-flask = "^3.0.0"
+python = "^3.11"
+flask = "^3.0.1"
 flask-cors = "^4.0.0"
-gunicorn = "^20.1.0"
-pydantic = "^1.10.13"
-pyjwt = "^2.6.0"
-pymongo = { version = "^4.3.3", extras = ["srv"] }
-python-slugify = "^8.0.1"
-typer = "^0.7.0"
-types-python-slugify = "^8.0.0.3"
-# mongodb-odm = "0.2.4"
-mongodb-odm = { git = "https://github.com/nayan32biswas/mongodb-odm.git", rev = "main" }
+gunicorn = "^21.2.0"
+pydantic = "^2.5.3"
+pyjwt = "^2.8.0"
+pymongo = { version = "^4.6.1", extras = ["srv"] }
+python-slugify = "^8.0.2"
+typer = "^0.9.0"
+types-python-slugify = "^8.0.2.20240127"
+mongodb-odm = "^1.0.0"
+# mongodb-odm = { git = "https://github.com/nayan32biswas/mongodb-odm.git", rev = "main" }
 
 [tool.poetry.group.dev.dependencies]
 # Formatter and linters
-mypy = "1.5.0"
-ruff = "^0.1.5"
+mypy = "^1.8.0"
+ruff = "^0.1.14"
 # Test
-coverage = { extras = ["toml"], version = "^7.2.2" }
-pytest = "^7.2.2"
-Faker = "18.3.2"
-httpx = "^0.23.0"
+coverage = { extras = ["toml"], version = "^7.4.1" }
+pytest = "^8.0.0"
+Faker = "^22.5.1"
+httpx = "^0.26.0"
 # Others
-pre-commit = "^3.3.3"
-types-passlib = "1.7.7.11"
-types-flask-cors = "^4.0.0.2"
+pre-commit = "^3.6.0"
+types-passlib = "^1.7.7.20240106"
+types-flask-cors = "^4.0.0.20240106"
 
 [build-system]
 requires = ["poetry-core"]

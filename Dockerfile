@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.12
 
 ARG YOUR_ENV=dev
 
@@ -10,7 +10,7 @@ ENV YOUR_ENV=${YOUR_ENV} \
   PIP_DISABLE_PIP_VERSION_CHECK=on \
   PIP_DEFAULT_TIMEOUT=100
 
-RUN pip install "poetry==1.7"
+RUN pip install "poetry"
 
 WORKDIR /code
 
